@@ -1,0 +1,32 @@
+---
+title: "Testing"
+author: "Andrew Martinez"
+date: "5/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+if(!"pacman" %in% installed.packages()) {install.packages("pacman")}
+pacman::p_load("ggplot2","data.table","lubridate","bit64","rpart","partykit","dplyr","leaflet","chron","proj4","ranger", "ggplot2", "ggthemes", "tidyr", "dplyr", "xts", "glmnet", "xgboost", "tuneRanger", "mlr")
+
+```
+
+## Data Load
+
+```{r}
+raw_train_df <- fread('Data/BankCamp_train.csv', stringsAsFactors = F)
+raw_test_df <- fread('Data/BankCamp_test.csv', stringsAsFactors = F)
+
+summary(raw_train_df)
+head(raw_train_df)
+```
+
+## Data Prep
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
