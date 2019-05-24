@@ -1,0 +1,105 @@
+---
+title: "Bank Term Deposit - Data Exploration & Preparation"
+author: "O1 R Masters :)"
+date: "06 June 2019"
+output: html_document
+---
+
+## 0. Source loading
+
+```{r, warning=FALSE, message=FALSE}
+source('notebooks/libraries.R')
+```
+
+## 1. Data set
+
+### 1.1 Data loading
+
+```{r}
+raw_train_data<-fread('Data/BankCamp_train.csv', stringsAsFactors = F)
+raw_test_data<-fread('Data/BankCamp_test.csv', stringsAsFactors = F)
+
+str(raw_train_data)
+str(raw_test_data)
+```
+```{r target distribution}
+target_dist<-ggplot(raw_train_data, aes(y, fill=y))+
+              geom_bar()+
+              scale_fill_manual(values=c("#995052", "#529950"))+
+              theme_minimal() +
+              xlab("target - campaign offer accepted")+
+              ggtitle("Distribution of target variable") +
+              theme(text = element_text(face = "bold"),
+              legend.position = "none",
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              plot.title = element_text(hjust = 0.5))
+target_dist
+```
+
+```{r variable classification}
+discrete_var<-c("job", "marital", "education", "default", "housing", "loan","contact", "month", "poutcome")
+  
+continuous_var<-c("age", "balance","day", "duration", "campaign", "pdays", "previous")
+```
+
+```{r distribution table for continuous variables}
+cont_var <- as.data.frame(raw_train_data)
+cont_var <- cont_var[ , (names(cont_var) %in% continuous_var)]
+distribution <- as.data.frame(t(sapply(cont_var, quantile)))
+distribution$Mean <- sapply(cont_var, mean)
+distribution$SD <- sapply(cont_var, sd)
+datatable(round(distribution, 2))
+```
+
+```{r distribution of continuous variables}
+cont_var_melt <- as.data.frame(melt(cont_var))
+
+cont_dist <- ggplot(cont_var_melt, aes(value)) +
+        geom_density(aes(fill = variable)) +
+        facet_wrap(~variable, scales = "free", nrow = 3) +
+        labs(x = "", y = "", fill = "") +
+        theme_minimal() +
+        scale_fill_tableau() +
+        ggtitle("Distribution of each continous variable") +
+        theme(text = element_text(face = "bold"),
+              legend.position = "none",
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+             plot.title = element_text(hjust = 0.5))
+
+cont_dist
+```
+
+```{r correlation matrix for continuous variables}
+correlation <- cor(cont_var)
+corrplot(correlation)
+```
+
+```{r distribution of discrete variables}
+df_disc <- raw_train_data[, ..discrete_var]
+df_disc <- sapply(df_disc, as.factor)
+df_disc <- as.data.frame(melt(df_disc))
+
+disc_dist <- ggplot(df_disc, aes(value)) +
+      geom_bar(aes(fill = Var2)) + 
+      scale_y_continuous(breaks = scales::pretty_breaks(n = 5)) +
+      scale_x_discrete(expand = c(0,0)) +
+      facet_wrap(~Var2, scales = "free", nrow = 2) +
+      scale_fill_tableau() +
+      ggtitle("Count of each discrete variable") +
+      labs(fill = "", x = "", y = "") +
+      theme_minimal() +
+      theme(text = element_text(face = "plain"),
+            legend.position = "none",
+            axis.text.x = element_text(size = 7, angle = 90),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+           plot.title = element_text(hjust = 0.5)) 
+
+disc_dist
+```
+
+```{r target distribution for job}
+ 
+```
