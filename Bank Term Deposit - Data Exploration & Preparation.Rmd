@@ -101,5 +101,66 @@ disc_dist
 ```
 
 ```{r target distribution for job}
- 
+ ggplot(raw_train_data,mapping = aes(job,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
 ```
+```{r target distribution for marital}
+ggplot(raw_train_data,mapping = aes(marital,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+
+```
+```{r target disrtribution for education}
+ggplot(raw_train_data,mapping = aes(education,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+```
+
+```{r target distribution for default}
+ggplot(raw_train_data,mapping = aes(default,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+
+```
+```{r target distribution for housing}
+ggplot(raw_train_data,mapping = aes(housing,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+
+```
+
+```{r target distribution for loan}
+ggplot(raw_train_data,mapping = aes(loan,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+
+```
+
+```{r target distribution for contact}
+ggplot(raw_train_data,mapping = aes(contact,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+```
+```{r target distribution for }
+ggplot(raw_train_data,mapping = aes(month,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+
+```
+```{r target distribution for poutcome}
+ggplot(raw_train_data,mapping = aes(poutcome,fill=y))+
+  geom_bar(col="black")+
+  geom_text(stat="count",aes(label=..count..),
+            position=position_stack(0.5), color="white", size=3)
+
+```
+
