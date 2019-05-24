@@ -37,8 +37,3 @@ pipeline_casero <- function(df, preprocessing=c(), creation=c(), selection=c(),
 }
 
 
-rf_baseline <- pipeline_casero(bank_train)
-
-saveRDS(rf_baseline, "./saved_models/rf_baseline.rds")
-
-
