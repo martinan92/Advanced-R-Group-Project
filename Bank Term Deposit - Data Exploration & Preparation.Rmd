@@ -22,7 +22,8 @@ raw_test_data<-fread('Data/BankCamp_test.csv', stringsAsFactors = F)
 str(raw_train_data)
 str(raw_test_data)
 ```
-Classifying the variables between discrete and continuous variables 
+
+#### Classifying the variables between discrete and continuous variables 
 
 ```{r variable classification}
 discrete_var<-c("job", "marital", "education", "default", "housing", "loan","contact", "month", "poutcome")
@@ -62,7 +63,7 @@ datatable(round(distribution, 2))
 
 ### 3.1 Overview of the distribution of all the continuous variables 
 
-```{r distribution of continuous variables}
+```{r distribution of continuous variables, message=FALSE, warning=FALSE}
 cont_var_melt <- as.data.frame(melt(cont_var))
 
 cont_dist <- ggplot(cont_var_melt, aes(value)) +
@@ -77,29 +78,23 @@ cont_dist <- ggplot(cont_var_melt, aes(value)) +
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(),
              plot.title = element_text(hjust = 0.5))
-
 cont_dist
 ```
+
 ### 3.2  Distribution of each continuous variable 
 
 ```{r}
 
 ## Create a new column in the test dataset 
-
 raw_test_data$y <- NA
 
 ## Creating a column "dataType" for both train and test datasets and assign the value 'train' & 'test'
-
 raw_train_data$dataType <- "train"
 raw_test_data$dataType <- "test"
 
 
 ## Merging both train and test datasets 
-
 dataset <- rbind(raw_train_data, raw_test_data)
-
-summary(dataset)
-str(dataset)
 ```
 
 
@@ -203,6 +198,7 @@ disc_dist <- ggplot(df_disc, aes(value)) +
 
 disc_dist
 ```
+
 ### 4.2 Distribution of each discrete variable 
 
 ### Comparing train and test distirbution of discrete features {.tabset .tabset-fade .tabset-pills}
@@ -210,20 +206,17 @@ disc_dist
 #### Job 
 
 ```{r Distribution of Job variable}
-
 job_train <- ggplot(raw_train_data, aes(x=job)) +
         geom_bar(fill ="#3526e0") +
-        ggtitle("Job Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
-            legend.position = "none",
+        ggtitle("Job Distribution - Train") + labs(y = "", x="") + theme_minimal() + 
+        theme(text = element_text(face = "plain"), legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 job_test <-  ggplot(raw_test_data, aes(x=job)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Job Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Job Distribution - Test") + labs(y = "", x="") +         theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",  
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -231,25 +224,23 @@ job_test <-  ggplot(raw_test_data, aes(x=job)) +
            plot.title = element_text(hjust = 0.5)) 
 
 grid.arrange(job_train, job_test, ncol=2)
-
 ```
+
 #### Marital 
 
 ```{r Distribution of Marital variable}
-
 marital_train <- ggplot(raw_train_data, aes(x=marital)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("Marital Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("Marital Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 marital_test <-  ggplot(raw_test_data, aes(x=marital)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Marital Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Marital Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -262,20 +253,18 @@ grid.arrange(marital_train, marital_test, ncol=2)
 #### Education 
 
 ```{r Distribution of Education variable}
-
 education_train <- ggplot(raw_train_data, aes(x=education)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("Education Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("Education Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 education_test <-  ggplot(raw_test_data, aes(x=education)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Education Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Education Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -288,20 +277,18 @@ grid.arrange(education_train, education_test, ncol=2)
 #### Default 
 
 ```{r Distribution of Default variable}
-
 default_train <- ggplot(raw_train_data, aes(x=default)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("Default Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("Default Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 default_test <-  ggplot(raw_test_data, aes(x=default)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Default Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Default Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -314,20 +301,18 @@ grid.arrange(default_train, default_test, ncol=2)
 #### Housing 
 
 ```{r Distribution of Housing variable}
-
 housing_train <- ggplot(raw_train_data, aes(x=housing)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("Housing Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("Housing Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 housing_test <-  ggplot(raw_test_data, aes(x=housing)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Housing Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Housing Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -340,20 +325,18 @@ grid.arrange(housing_train, housing_test, ncol=2)
 #### Loan 
 
 ```{r Distribution of Loan variable}
-
 loan_train <- ggplot(raw_train_data, aes(x=loan)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("Loan Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("Loan Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 loan_test <-  ggplot(raw_test_data, aes(x=loan)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Loan Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Loan Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -366,20 +349,18 @@ grid.arrange(loan_train, loan_test, ncol=2)
 #### Contact 
 
 ```{r Distribution of Contact variable}
-
 contact_train <- ggplot(raw_train_data, aes(x=contact)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("Contact Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("Contact Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 contact_test <-  ggplot(raw_test_data, aes(x=contact)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Contact Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Contact Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -392,20 +373,18 @@ grid.arrange(contact_train, contact_test, ncol=2)
 #### Month 
 
 ```{r Distribution of Month variable}
-
 month_train <- ggplot(raw_train_data, aes(x=month)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("Month Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("Month Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 month_test <-  ggplot(raw_test_data, aes(x=month)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("Month Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("Month Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -413,26 +392,23 @@ month_test <-  ggplot(raw_test_data, aes(x=month)) +
            plot.title = element_text(hjust = 0.5)) 
 
 grid.arrange(month_train, month_test, ncol=2)
-
 ```
 
-#### poutcome 
+#### Previous campaign
 
 ```{r Distribution of poutcome variable}
-
 poutcome_train <- ggplot(raw_train_data, aes(x=poutcome)) +
-        geom_bar(fill ="#3526e0") +
-        ggtitle("poutcome Distribution - Train") + labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
+        geom_bar(fill ="#3526e0") + ggtitle("poutcome Distribution - Train") + 
+        labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
            plot.title = element_text(hjust = 0.5)) 
 
-
 poutcome_test <-  ggplot(raw_test_data, aes(x=poutcome)) +
-        geom_bar(fill = "#e08926") +
-        ggtitle("poutcome Distribution - Test") + labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
+        geom_bar(fill = "#e08926") + ggtitle("poutcome Distribution - Test") + 
+        labs(y = "", x="") + theme_minimal() +  theme(text = element_text(face = "plain"),
             legend.position = "none",
             axis.text.x = element_text(size = 7, angle = 90),
             panel.grid.major = element_blank(),
@@ -440,7 +416,6 @@ poutcome_test <-  ggplot(raw_test_data, aes(x=poutcome)) +
            plot.title = element_text(hjust = 0.5)) 
 
 grid.arrange(poutcome_train, poutcome_test, ncol=2)
-
 ```
 
 ## 5. Correlation plot 
@@ -456,7 +431,7 @@ corrplot(correlation)
 
 #### Outlier Analysis for Continuous Variables 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 cont_box <- ggplot(cont_var_melt, aes(variable, value)) +
           geom_boxplot(aes(fill = variable)) +
@@ -478,7 +453,7 @@ cont_box
 
 #### Outlier Analysis for Continuous Scaled Variables 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 df_cont_norm <- raw_train_data[,..continuous_var]
 df_cont_norm <- as.data.frame(apply(df_cont_norm, 2,function(x)((x - min(x))/(max(x)-min(x)))))
@@ -504,7 +479,7 @@ cont_box_norm
 
 #### Outlier Analysis for Discrete Variables
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 
 disc_box <- ggplot(df_disc, aes(Var2, as.numeric(value))) +
                 geom_boxplot(aes(fill = Var2)) +
