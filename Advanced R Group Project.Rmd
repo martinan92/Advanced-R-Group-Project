@@ -31,6 +31,8 @@ scaled_test_df$y <- as.factor(scaled_test_df$y)
 
 smote_train_df <- SMOTE(y ~ ., scaled_train_df, perc.over = 500)
 summary(smote_train_df)
+
+write.csv(smote_train_df, file = "Data/smote_train.csv")
 ```
 
 
