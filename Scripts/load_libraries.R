@@ -6,7 +6,9 @@ load_reqs <- function(reqs) {
   }
 }
 
-pkgs <- c("data.table", "lubridate", "ggplot2", "ggrepel", "ggiraph", "plotly", "caret", "bit64", "DataExplorer")
+pkgs <- c("data.table", "lubridate", "ggplot2", "ggrepel", 
+          "ggiraph", "plotly", "caret", "bit64", "DataExplorer", 
+          'pROC', 'ISOweek')
 
 load_reqs(pkgs)
 
