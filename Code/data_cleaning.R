@@ -12,7 +12,7 @@ fix_types <- function(df){
          names(df1)[sapply(df1, is.integer)]]
   
   df1$day <- as.factor(df1$day)
-  df1$weekday <- as.factor(df1$weekday)
+  
   
   df1$y_num <- FALSE
   
@@ -23,18 +23,6 @@ fix_types <- function(df){
   colnames(df1)[which(names(df1) == "y_num")] <- "y"
   
   return(df1)    
-  
-}
-
-scale_df <- function(df){
-  df1 <- data.table(df)
-  
-  numeric_vars <- names(df1)[sapply(df1, is.numeric)]
-  
-  ## Scale 
-  df1[, (numeric_vars) := lapply(.SD, scale), .SDcols=numeric_vars]
-  
-  return(df1)  
   
 }
 

@@ -1,3 +1,15 @@
+scale_df <- function(df){
+  df1 <- data.table(df)
+  
+  numeric_vars <- names(df1)[sapply(df1, is.numeric)]
+  
+  ## Scale 
+  df1[, (numeric_vars) := lapply(.SD, scale), .SDcols=numeric_vars]
+  
+  return(df1)  
+  
+}
+
 drop_variables <- function(df){
   df_sub <- df[, -c('duration', 'pdays', 'month', 'day')]
   
@@ -18,6 +30,7 @@ create_weekday <- function(df){
   df1$date <- ISOdate(2014, df1$month_lev , df1$day)
   
   df1$weekday <- ISOweekday(df1$date)
+  df1$weekday <- as.factor(df1$weekday)
   
   return(df1[,-c('month_lev', 'date')])
   

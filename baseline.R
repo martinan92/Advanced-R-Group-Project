@@ -1,8 +1,10 @@
 library("data.table")
-source('pipeline_casero.R')
+source('Code/pipeline_casero.R')
 
 bank_train <- fread("Data/BankCamp_train.csv")
 bank_test <- fread("Data/BankCamp_test.csv")
+
+bank_train$y <- factor(bank_train$y, levels=c("yes", "no"))
 
 ################################### Logit Baseline ################################### 
 ######################################################################################
