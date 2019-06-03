@@ -14,7 +14,7 @@ bank_test <- fread("Data/BankCamp_test.csv")
 
 logit_baseline <- pipeline_casero(bank_train, model="glm")
 
-saveRDS(logit_baseline, "./saved_models/logit_baseline.rds")
+saveRDS(logit_baseline, "logit_baseline.rds")
 
 ###################################### RF Tuned ###################################### 
 ######################################################################################
@@ -27,7 +27,7 @@ tg_RF <- data.table(expand.grid(mtry = 2:4,
                     
 rf_tuned <- pipeline_casero(bank_train, tunegrid=tg_RF)
 
-saveRDS(rf_tuned, "./saved_models/rf_tuned.rds")
+saveRDS(rf_tuned, "rf_tuned.rds")
 
 #################################### XG Boost Tuned ##################################
 ######################################################################################
@@ -93,17 +93,17 @@ tg_XG5 <- expand.grid(nrounds = seq(from = 100, to = 10000, by = 100),
 xg_tuned5 <- pipeline_casero(bank_train, model="xgbTree", tunegrid=tg_XG5)
 
 # Final Tuning Round
-final_grid <- expand.grid(nrounds = tg_XG5$bestTune$nrounds,
-                                    eta = tg_XG5$bestTune$eta,
-                                    max_depth = tg_XG5$bestTune$max_depth,
-                                    gamma = tg_XG5$bestTune$gamma,
-                                    colsample_bytree = tg_XG5$bestTune$colsample_bytree,
-                                    min_child_weight = tg_XG5$bestTune$min_child_weight,
-                                    subsample = tg_XG5$bestTune$subsample)
+final_grid <- expand.grid(nrounds = xg_tuned5$bestTune$nrounds,
+                                    eta = xg_tuned5$bestTune$eta,
+                                    max_depth = xg_tuned5$bestTune$max_depth,
+                                    gamma = xg_tuned5$bestTune$gamma,
+                                    colsample_bytree = xg_tuned5$bestTune$colsample_bytree,
+                                    min_child_weight = xg_tuned5$bestTune$min_child_weight,
+                                    subsample = xg_tuned5$bestTune$subsample)
 
 xg_final <- pipeline_casero(bank_train, model="xgbTree", tunegrid=final_grid)
 
-saveRDS(xg_final, "./saved_models/xg_final.rds")
+saveRDS(xg_final, "xg_final.rds")
                                          
                                          
                                          
