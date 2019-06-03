@@ -5,6 +5,8 @@ date: "06 June 2019"
 output: html_document
 ---
 
+![O1 R Masters :)](Team.jpeg)
+
 ## 0. Source loading
 
 ```{r, warning=FALSE, message=FALSE}
@@ -429,7 +431,7 @@ corrplot(correlation, method ="number", type = "upper")
 
 ### Outlier Analysis for continuous and discrete variables {.tabset .tabset-fade .tabset-pills}
 
-#### Outlier Analysis for Continuous Variables 
+#### Continuous Variables 
 
 ```{r, warning=FALSE, message=FALSE}
 
@@ -451,7 +453,7 @@ cont_box
 
 ```
 
-#### Outlier Analysis for Continuous Scaled Variables 
+#### Continuous Scaled Variables 
 
 ```{r, warning=FALSE, message=FALSE}
 
@@ -477,7 +479,7 @@ cont_box_norm
 
 ```
 
-#### Outlier Analysis for Discrete Variables
+#### Discrete Variables
 
 ```{r, warning=FALSE, message=FALSE}
 
@@ -583,7 +585,7 @@ ggplot(raw_train_data,mapping = aes(month,fill=y))+
 
 ```
 
-#### poutcome
+#### Previous campaign
 
 ```{r target distribution for poutcome}
 ggplot(raw_train_data,mapping = aes(poutcome,fill=y))+
@@ -592,43 +594,3 @@ ggplot(raw_train_data,mapping = aes(poutcome,fill=y))+
             position=position_stack(0.5), color="white", size=3)
 
 ```
-
-## 8. Data Cleaning 
-
-```{r, warning=FALSE, message=FALSE}
-
-source('Code/data_cleaning.R')
-
-prep_train_data<-fread('Data/BankCamp_train.csv', stringsAsFactors = F)
-prep_test_data<-fread('Data/BankCamp_test.csv', stringsAsFactors = F)
-
-prep_test_data$y <- NA
-
-```
-
-### 8.1 Fixing types 
-
-```{r}
-
-prep_train_data <- fix_types(prep_train_data)
-prep_test_data <- fix_types(prep_test_data)
-prep_test_data$y <- NULL
-
-```
-
-### 8.2 Scaling numeric features 
-
-```{r}
-
-prep_train_data <- scale_df(prep_train_data)
-prep_test_data <- scale_df(prep_test_data)
-
-```
-
-### 8.3 Saving the prepared datasets 
-
-```{r}
-fwrite(prep_train_data, 'Data/prep_train_data.csv', row.names = F)
-fwrite(prep_test_data, 'Data/prep_test_data.csv', row.names = F)
-```
-

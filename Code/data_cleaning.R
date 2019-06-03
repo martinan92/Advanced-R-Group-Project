@@ -26,17 +26,5 @@ fix_types <- function(df){
   
 }
 
-scale_df <- function(df){
-  df1 <- data.table(df)
-  
-  numeric_vars <- names(df1)[sapply(df1, is.numeric)]
-  
-  ## Scale 
-  df1[, (numeric_vars) := lapply(.SD, scale), .SDcols=numeric_vars]
-  
-  return(df1)  
-  
-}
-
 
 

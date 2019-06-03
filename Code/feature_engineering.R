@@ -1,3 +1,15 @@
+scale_df <- function(df){
+  df1 <- data.table(df)
+  
+  numeric_vars <- names(df1)[sapply(df1, is.numeric)]
+  
+  ## Scale 
+  df1[, (numeric_vars) := lapply(.SD, scale), .SDcols=numeric_vars]
+  
+  return(df1)  
+  
+}
+
 drop_variables <- function(df){
   df_sub <- df[, -c('duration', 'pdays', 'month', 'day')]
   
