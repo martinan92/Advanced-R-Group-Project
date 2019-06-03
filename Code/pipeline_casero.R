@@ -20,14 +20,19 @@ pipeline_casero <- function(df, preprocessing=c(), creation=c(), selection=c(),
     df <- f(df)
   }
   
-  tc <- trainControl(method="cv", number=k, search="random")
+  tc <- trainControl(method="cv",
+                     number=k,
+                     search="random",
+                     summaryFunction=classification_summary,
+                     classProbs=TRUE,
+                     savePredictions=TRUE)
   
   print(paste("Beginning modeling step at", Sys.time()))
   trained <- train(y~.,
                    df,
                    method=model,
-                   metric="Accuracy",
-                   maximize=FALSE,
+                   metric="Sensitivity",
+                   maximize=TRUE,
                    trControl=tc,
                    tuneGrid=tunegrid)
   
