@@ -1,3 +1,5 @@
+source('Code/load_libraries.R')
+
 drop_variables <- function(df){
   df_sub <- df[, -c('duration', 'pdays', 'month', 'day')]
   

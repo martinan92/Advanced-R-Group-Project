@@ -1,5 +1,4 @@
-library(pROC)
-library(caret)
+source('Code/load_libraries.R')
 
 # Taken from class codes on campus
 accuracy <- function(data) {

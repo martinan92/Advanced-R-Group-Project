@@ -1,5 +1,4 @@
-library("data.table")
-library("caret")
+source('Code/load_libraries.R')
 
 pipeline_casero <- function(df, preprocessing=c(), creation=c(), selection=c(), 
                             model="ranger", tunegrid=NULL, tunelength=10, k=3) {
