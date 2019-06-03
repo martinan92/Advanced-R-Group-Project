@@ -13,15 +13,6 @@ fix_types <- function(df){
   
   df1$day <- as.factor(df1$day)
   
-  
-  df1$y_num <- FALSE
-  
-  df1[df1$y == 'yes', 'y_num'] <- TRUE
-  
-  df1$y <- NULL
-    
-  colnames(df1)[which(names(df1) == "y_num")] <- "y"
-  
   return(df1)    
   
 }

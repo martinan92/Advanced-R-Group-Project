@@ -506,7 +506,90 @@ disc_box
 ```
 
 
-### 7. Target distribution across features {.tabset .tabset-fade .tabset-pills}
+## 7. Target distribution across features 
+
+### 7.1 Target distribution across continuous features {.tabset .tabset-fade .tabset-pills}
+
+#### Age 
+
+```{r Target Distribution of Age Variable}
+
+ggplot(raw_train_data, aes(x=age, color = y)) +
+        geom_density(alpha = 0.7) +
+        ggtitle("Age Target Distribution") + theme_classic() + 
+        labs(color = "Offer accepted") +
+        scale_color_manual(values=c("#995052", "#529950"))
+```
+
+#### Balance
+
+```{r Target Distribution of Balance Variable }
+
+ggplot(raw_train_data, aes(x=balance, color = y)) +
+        geom_density(alpha = 0.7) +
+        ggtitle("Balance Target Distribution") + theme_classic() +
+        labs(color = "Offer accepted") +
+        scale_color_manual(values=c("#995052", "#529950"))
+```
+ 
+#### Day
+ 
+```{r Target Distribution of Day Variable}
+
+ggplot(raw_train_data, aes(x=day, color = y)) +
+        geom_density(alpha = 0.7) +
+        ggtitle("Day Target Distribution") + theme_classic() +
+        labs(color = "Offer accepted") +
+        scale_color_manual(values=c("#995052", "#529950"))
+```
+
+#### Duration
+
+```{r Target Distribution of Duration Variable}
+
+ggplot(raw_train_data, aes(x=duration, color = y)) +
+        geom_density(alpha = 0.7) +
+        ggtitle("Duration Target Distribution") + theme_classic() +
+        labs(color = "Offer accepted") +
+        scale_color_manual(values=c("#995052", "#529950"))
+```
+
+#### Campaign
+
+```{r Target Distribution of Campaign Variable}
+ 
+ggplot(raw_train_data, aes(x=campaign, color = y)) +
+        geom_density(alpha = 0.7) +
+        ggtitle("Campaign Target Distribution") + theme_classic() +
+        labs(color = "Offer accepted") +
+        scale_color_manual(values=c("#995052", "#529950"))
+```
+
+#### pdays
+
+```{r Target Distribution of pdays variable}
+
+ggplot(raw_train_data, aes(x=pdays, color = y)) +
+        geom_density(alpha = 0.7) +
+        ggtitle("pdays Target Distribution") + theme_classic() +
+        labs(color = "Offer accepted") +
+        scale_color_manual(values=c("#995052", "#529950"))
+```
+
+#### previous
+
+```{r Target Distribution of previous variable}
+
+ggplot(raw_train_data, aes(x=previous, color = y)) +
+        geom_density(alpha = 0.7) +
+        ggtitle("Previous Target Distribution") + theme_classic() +
+        labs(color = "Offer accepted") +
+        scale_color_manual(values=c("#995052", "#529950"))
+
+```
+
+
+### 7.2 Target distribution across discrete features {.tabset .tabset-fade .tabset-pills}
 
 #### Job
 
