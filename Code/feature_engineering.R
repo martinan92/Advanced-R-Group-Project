@@ -65,6 +65,27 @@ clustering <- function(df_train, df_test, n_clusters){
 }
 
 
+IQR.outliers <- function(x,iqr = 1.5) {
+  Q3<-quantile(x,0.75)
+  Q1<-quantile(x,0.25)
+  IQR<-(Q3-Q1)
+  left<- (Q1-(iqr*IQR))
+  right<- (Q3+(iqr*IQR))
+  return(c(left,right))
+}
 
+remove_outliers <- function(df, n = 1.5){
+  df1 <- data.table(df)
+  numeric_vars <- names(df1)[sapply(df1, is.numeric)]
+  
+  for(var in numeric_vars){
+    lim <- IQR.outliers(df1[,get(var)], n)
+    df1[get(var) < lim[1], var] <- lim[1]
+    df1[get(var) > lim[2], var] <- lim[2]
+  }
+  
+  return(df1)  
+  
+}
 
 
