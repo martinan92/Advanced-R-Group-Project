@@ -422,7 +422,7 @@ grid.arrange(poutcome_train, poutcome_test, ncol=2)
 
 ```{r correlation matrix for continuous variables}
 correlation <- cor(cont_var)
-corrplot(correlation)
+corrplot(correlation, method ="number", type = "upper")
 ```
 
 ## 6. Outlier Analysis 
@@ -590,6 +590,12 @@ ggplot(raw_train_data,mapping = aes(poutcome,fill=y))+
   geom_bar(col="black")+
   geom_text(stat="count",aes(label=..count..),
             position=position_stack(0.5), color="white", size=3)
+
+```
+
+## 8. Data Cleaning 
+
+```{r}
 
 ```
 
