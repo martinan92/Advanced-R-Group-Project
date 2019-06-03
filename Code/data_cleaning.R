@@ -12,7 +12,7 @@ fix_types <- function(df){
          names(df1)[sapply(df1, is.integer)]]
   
   df1$day <- as.factor(df1$day)
-  df1$weekday <- as.factor(df1$weekday)
+  
   
   df1$y_num <- FALSE
   

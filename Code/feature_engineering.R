@@ -18,6 +18,7 @@ create_weekday <- function(df){
   df1$date <- ISOdate(2014, df1$month_lev , df1$day)
   
   df1$weekday <- ISOweekday(df1$date)
+  df1$weekday <- as.factor(df1$weekday)
   
   return(df1[,-c('month_lev', 'date')])
   
