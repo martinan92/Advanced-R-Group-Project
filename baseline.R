@@ -1,8 +1,9 @@
 library("data.table")
 
-bank_train <- fread("BankCamp_train.csv")
-bank_test <- fread("BankCamp_test.csv")
+bank_train <- fread("Data/BankCamp_train.csv")
+bank_test <- fread("Data/BankCamp_test.csv")
 
+bank_train$y <- factor(bank_train$y, levels=c("yes", "no"))
 
 logit_baseline <- pipeline_casero(bank_train, model="glm")
 
