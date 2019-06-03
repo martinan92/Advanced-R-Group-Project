@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup}
-source('Code/pipeline_casero.R')
+# source('Code/load_libraries.R')
 source('Code/data_cleaning.R')
 
 raw_bank_train <- fread("Data/BankCamp_train.csv")
@@ -14,22 +14,15 @@ raw_bank_test <- fread("Data/BankCamp_test.csv")
 
 ```
 
-## Fixing Data Types and Scaling
-```{r}
-fixed_train_df <- fix_types(raw_bank_train)
-
-scaled_train_df <- scale_df(fixed_train_df)
-scaled_test_df <- scale_df(raw_bank_test)
-
-head(scaled_train_df)
-```
-
 ## SMOTE
 ```{r}
-scaled_test_df$y <- ifelse(scaled_test_df$y=='no',0,1)
-scaled_test_df$y <- as.factor(scaled_test_df$y)
+fixed_train_df <- fix_types(raw_bank_train)
+fixed_test_df <- fix_types(raw_bank_test)
 
-smote_train_df <- SMOTE(y ~ ., scaled_train_df, perc.over = 500)
+fixed_train_df$y <- ifelse(fixed_train_df$y=='no',0,1)
+fixed_train_df$y <- as.factor(fixed_train_df$y)
+
+smote_train_df <- SMOTE(y ~ ., fixed_train_df, perc.over = 500)
 summary(smote_train_df)
 
 write.csv(smote_train_df, file = "Data/smote_train.csv")
