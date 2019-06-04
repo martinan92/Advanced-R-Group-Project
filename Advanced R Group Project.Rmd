@@ -15,25 +15,41 @@ raw_bank_test <- fread("Data/BankCamp_test.csv")
 
 ## SMOTE
 ```{r}
-fixed_train_df <- fix_types(raw_bank_train)
-fixed_test_df <- fix_types(raw_bank_test)
+fixed_train_df <- fix_types(create_weekday(raw_bank_train))
 
-fixed_train_df$y <- ifelse(fixed_train_df$y=='no',0,1)
-fixed_train_df$y <- as.factor(fixed_train_df$y)
+train_test <- f_partition(fixed_train_df, test_proportion=0.1, seed=20190603)
 
-smote_train_df <- SMOTE(y ~ ., fixed_train_df, perc.over = 500)
-summary(smote_train_df)
+train_to_smote <- train_test$train
+holdout <- train_test$test
 
-write.csv(smote_train_df, file = "Data/smote_train.csv")
+smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
+print(summary(smote_train_df))
+
+fwrite(smote_train_df, file = "Data/smote_train.csv")
 ```
 
 
-## Baseline
+## Baselines
 ### Logit
 ```{r}
-logit_baseline <- pipeline_casero(smote_train_df, model="glm")
-saveRDS(logit_baseline, "./saved_models/logit_baseline.rds")
 
+pp <- c(scale_df)
+
+logit_baseline_smote <- pipeline_casero(smote_train_df, preprocessing=pp, model="glm")
+saveRDS(logit_baseline_smote, "./saved_models/logit_baseline_smote.rds")
+
+print(logit_baseline_smote$results[c("AUC", "Sensitivity", "Precision", "Accuracy")])
+
+logit_holdout <- scale_df(holdout)
+
+preds <- predict(logit_baseline_smote, logit_holdout)
+
+sensitivity(data=preds, reference=factor(logit_holdout$y, levels=c("yes", "no")),positive="yes")
+specificity(data=preds, reference=factor(logit_holdout$y, levels=c("yes", "no")),positive="yes")
+precision(data=preds, reference=factor(logit_holdout$y, levels=c("yes", "no")),positive="yes")
+accuracy(data=data.frame(pred=preds, obs=logit_holdout$y))
+
+table(preds, holdout$y)
 ```
 
 
@@ -43,16 +59,47 @@ tg <- data.table(expand.grid(mtry=15,
                              splitrule='gini',
                              min.node.size=5))
 
-rf_baseline <- pipeline_casero(smote_train_df, tunegrid=tg)
-saveRDS(rf_baseline, "./saved_models/rf_baseline.rds")
+rf_baseline_smote <- pipeline_casero(smote_train_df, tunegrid=tg)
+saveRDS(rf_baseline_smote, "./saved_models/rf_baseline_smote.rds")
+
+print(rf_baseline_smote$results[c("AUC", "Sensitivity", "Precision", "Accuracy")])
+
+preds <- predict(rf_baseline_smote, holdout)
+
+sensitivity(data=preds, reference=factor(holdout$y, levels=c("yes", "no")),positive="yes")
+specificity(data=preds, reference=factor(holdout$y, levels=c("yes", "no")),positive="yes")
+precision(data=preds, reference=factor(holdout$y, levels=c("yes", "no")),positive="yes")
+accuracy(data=data.frame(pred=preds, obs=holdout$y))
+
+table(preds, holdout$y)
 
 ```
 
 
 ### XG Boost
 ```{r}
-xg_baseline <- pipeline_casero(smote_train_df, model="xgbTree")
-saveRDS(xg_baseline, "./saved_models/xg_baseline.rds")
+# So many tuning parameters wow
+tg <- data.table(expand.grid(eta=0.4,
+                             max_depth='2',
+                             nrounds=500,
+                             gamma=10,
+                             colsample_bytree=0.5,
+                             min_child_weight=5,
+                             subsample=0.9))
+
+xg_baseline_smote <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg)
+
+print(xg_baseline_smote$results[c("AUC", "Sensitivity", "Precision", "Accuracy")])
+
+preds <- predict(xg_baseline_smote, holdout)
+
+sensitivity(data=preds, reference=factor(holdout$y, levels=c("yes", "no")),positive="yes")
+specificity(data=preds, reference=factor(holdout$y, levels=c("yes", "no")),positive="yes")
+precision(data=preds, reference=factor(holdout$y, levels=c("yes", "no")),positive="yes")
+accuracy(data=data.frame(pred=preds, obs=holdout$y))
+
+table(preds, holdout$y)
+saveRDS(xg_baseline_smote, "./saved_models/xg_baseline_smote.rds")
 
 ```
 
