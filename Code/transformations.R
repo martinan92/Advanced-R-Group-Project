@@ -4,6 +4,27 @@ drop_variables <- function(df){
   return(df_sub)
 }
 
+drop_day <- function(df) {
+  df_sub <- df[, -c('day')]
+  
+  return(df_sub)
+  
+}
+
+drop_pdays <- function(df) {
+  df_sub <- df[, -c('pdays')]
+  
+  return(df_sub)
+  
+}
+
+drop_duration <- function(df) {
+  df_sub <- df[, -c('duration')]
+  
+  return(df_sub)
+  
+}
+
 create_weekday <- function(df){
   df1 <- data.table(df)
   
@@ -71,6 +92,10 @@ clustering <- function(df_train, df_test, n_clusters){
   df_test$train <- 0
   
   df1 <- rbind(df_train, df_test, fill = TRUE)
+  
+  if(is.null(df1$total_contact)) {
+    df1 <- total_contacts(df1)
+  }
   
   set.seed(1912)
   clusters <- kmeans(scale(df1[,c("age", 'balance', 'total_contact')]),n_clusters)

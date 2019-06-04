@@ -153,17 +153,188 @@ model_results <- rbind(model_results, evaluate_model(model=xgb_scaled, holdout=s
 
 model_results
 ```
+logit_removed_features           0.7471264          0.85355123         0.4108723        0.8407520 (drop_day)
+logit_removed_features           0.3678161          0.87617850         0.2888087        0.8150401 (drop_duration)
+logit_removed_features           0.7379310          0.85606537         0.4120668        0.8418579 (drop_pdays)
+logit_removed_features           0.7448276           0.8582652         0.4180645        0.8446226 (drop_day and drop_pdays)
+
+```{r}
+if(file.exists("./saved_models/logit_drop_day.rds")) {
+  print("Model already trained, reading from file...")
+  logit_drop_day <- readRDS("./saved_models/logit_drop_day.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fs <- c(drop_day)
+  logit_drop_day <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
+  saveRDS(logit_drop_day, "./saved_models/logit_drop_day.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_drop_day, holdout=scale_df(holdout), "logit_drop_day"))
+
+model_results
+
+```
+
+```{r}
+if(file.exists("./saved_models/logit_drop_pdays.rds")) {
+  print("Model already trained, reading from file...")
+  logit_drop_pdays <- readRDS("./saved_models/logit_drop_pdays.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fs <- c(drop_pdays)
+  logit_drop_pdays <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
+  saveRDS(logit_drop_pdays, "./saved_models/logit_drop_pdays.rds")
+}
+
+model_results <- rbind(model_results,
+                       evaluate_model(model=logit_drop_pdays,
+                                      holdout=scale_df(holdout),
+                                      "logit_drop_pdays"))
+
+model_results
+```
 
 
 ```{r}
+if(file.exists("./saved_models/logit_drop_day_pdays.rds")) {
+  print("Model already trained, reading from file...")
+  logit_drop_day_pdays <- readRDS("./saved_models/logit_drop_day_pdays.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fs <- c(drop_day, drop_pdays)
+  logit_drop_day_pdays <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
+  saveRDS(logit_drop_day_pdays, "./saved_models/logit_drop_day_pdays.rds")
+}
 
+model_results <- rbind(model_results,
+                       evaluate_model(model=logit_drop_day_pdays,
+                                      holdout=scale_df(holdout),
+                                      "logit_drop_day_pdays"))
 
-
-
+model_results
 
 ```
 
 
+```{r}
+if(file.exists("./saved_models/rf_drop_day.rds")) {
+  print("Model already trained, reading from file...")
+  rf_drop_day <- readRDS("./saved_models/rf_drop_day.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+  
+  fs <- c(drop_day)
+
+  rf_drop_day <- pipeline_casero(smote_train_df, tunegrid=tg, selection=fs)
+  saveRDS(rf_drop_day, "./saved_models/rf_drop_day.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_drop_day, holdout=holdout, "rf_drop_day"))
+
+model_results
+```
+```{r}
+if(file.exists("./saved_models/rf_drop_day_pdays.rds")) {
+  print("Model already trained, reading from file...")
+  rf_drop_day_pdays <- readRDS("./saved_models/rf_drop_day_pdays.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+  
+  fs <- c(drop_day, drop_pdays)
+
+  rf_drop_day_pdays <- pipeline_casero(smote_train_df, tunegrid=tg, selection=fs)
+  saveRDS(rf_drop_day_pdays, "./saved_models/rf_drop_day_pdays.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_drop_day_pdays, holdout=holdout, "rf_drop_day_pdays"))
+
+model_results
+```
+
+
+
+```{r}
+if(file.exists("./saved_models/xgb_drop_day.rds")) {
+  print("Model already trained, reading from file...")
+  xgb_drop_day <- readRDS("./saved_models/xgb_drop_day.rds")
+} else {
+  # So many tuning parameters wow
+  tg <- data.table(expand.grid(eta=0.4,
+                             max_depth='2',
+                             nrounds=500,
+                             gamma=10,
+                             colsample_bytree=0.5,
+                             min_child_weight=5,
+                             subsample=0.9))
+
+  xgb_drop_day <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg)
+  saveRDS(xgb_drop_day, "./saved_models/xgb_drop_day.rds")
+
+}
+
+model_results <- rbind(model_results, evaluate_model(model=xgb_drop_day, holdout=holdout, "xgb_drop_day"))
+
+model_results
+```
+
+
+```{r}
+
+clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+
+if(file.exists("./saved_models/logit_cluster_drop_day.rds")) {
+  print("Model already trained, reading from file...")
+  logit_cluster_drop_day <- readRDS("./saved_models/logit_cluster_drop_day.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  
+  fs <- c(drop_day)
+  
+  logit_cluster_drop_day <- pipeline_casero(clustered$train, preprocessing=pp, selection=fs, model="glm")
+  saveRDS(logit_cluster_drop_day, "./saved_models/logit_cluster_drop_day.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_cluster_drop_day,
+                                                     holdout=scale_df(clustered$test),
+                                                     "logit_cluster_drop_day"))
+
+model_results
+```
+
+```{r}
+
+clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+
+if(file.exists("./saved_models/rf_cluster.rds")) {
+  print("Model already trained, reading from file...")
+  rf_cluster <- readRDS("./saved_models/rf_cluster.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+  
+  clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+
+  rf_cluster <- pipeline_casero(clustered$train, tunegrid=tg)
+  saveRDS(rf_cluster, "./saved_models/rf_cluster.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_cluster, holdout=clustered$test, "rf_cluster"))
+
+model_results
+```
 
 
 
