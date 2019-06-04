@@ -6,8 +6,7 @@ output: html_document
 ---
 
 ```{r setup}
-# source('Code/load_libraries.R')
-source('Code/data_cleaning.R')
+source('./load_libraries.R')
 
 raw_bank_train <- fread("Data/BankCamp_train.csv")
 raw_bank_test <- fread("Data/BankCamp_test.csv")
