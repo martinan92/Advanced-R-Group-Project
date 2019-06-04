@@ -595,37 +595,57 @@ ggplot(raw_train_data, aes(x=previous, color = y)) +
 
 ```{r target distribution for job}
  ggplot(raw_train_data,mapping = aes(job,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 ```
 
 #### Marital
 
 ```{r target distribution for marital}
 ggplot(raw_train_data,mapping = aes(marital,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
 
 ```
 
 #### Education
 
+
 ```{r target disrtribution for education}
 ggplot(raw_train_data,mapping = aes(education,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 ```
 
 #### Default
 
 ```{r target distribution for default}
 ggplot(raw_train_data,mapping = aes(default,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 
 ```
 
@@ -633,9 +653,14 @@ ggplot(raw_train_data,mapping = aes(default,fill=y))+
 
 ```{r target distribution for housing}
 ggplot(raw_train_data,mapping = aes(housing,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 
 ```
 
@@ -643,9 +668,14 @@ ggplot(raw_train_data,mapping = aes(housing,fill=y))+
 
 ```{r target distribution for loan}
 ggplot(raw_train_data,mapping = aes(loan,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 
 ```
 
@@ -653,18 +683,28 @@ ggplot(raw_train_data,mapping = aes(loan,fill=y))+
 
 ```{r target distribution for contact}
 ggplot(raw_train_data,mapping = aes(contact,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 ```
 
 #### Month
 
 ```{r target distribution for month}
 ggplot(raw_train_data,mapping = aes(month,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 
 ```
 
@@ -672,8 +712,13 @@ ggplot(raw_train_data,mapping = aes(month,fill=y))+
 
 ```{r target distribution for poutcome}
 ggplot(raw_train_data,mapping = aes(poutcome,fill=y))+
-  geom_bar(col="black")+
-  geom_text(stat="count",aes(label=..count..),
-            position=position_stack(0.5), color="white", size=3)
+  geom_bar(col="black", position = position_dodge(1))+
+  geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+            position=position_dodge(1), size=3, vjust = -.5)+
+  theme_classic() +
+  scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
+
+
+
 
 ```
