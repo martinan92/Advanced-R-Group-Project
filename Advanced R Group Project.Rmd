@@ -365,6 +365,10 @@ model_results
 ```
 
 
+```{r}
+fwrite(model_results, "./Data/model_results.csv")
+fread("./Data/model_results.csv")
+```
 
 
 
