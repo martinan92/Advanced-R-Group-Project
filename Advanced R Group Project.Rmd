@@ -33,16 +33,20 @@ fwrite(smote_train_df, file = "Data/smote_train.csv")
 ### Logit
 ```{r}
 
+if(file.exists("./saved_models/logit_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  logit_baseline_smote <- readRDS("./saved_models/logit_baseline_smote.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  logit_baseline_smote <- pipeline_casero(smote_train_df, preprocessing=pp, model="glm")
+  saveRDS(logit_baseline_smote, "./saved_models/logit_baseline_smote.rds")
+}
 
-
-pp <- c(scale_df)
-
-logit_baseline_smote <- pipeline_casero(smote_train_df, preprocessing=pp, model="glm")
-saveRDS(logit_baseline_smote, "./saved_models/logit_baseline_smote.rds")
 
 logit_results <- evaluate_model(model=logit_baseline_smote, holdout=scale_df(holdout), "logit_baseline_smote")
 
-model_results <- setNames(data.table(matrix(nrow = 0, ncol = 10)), names(logit_results))
+model_results <- setNames(data.table(matrix(nrow = 0, ncol = 15)), names(logit_results))
 model_results <- rbind(model_results, logit_results)
 
 model_results
@@ -52,12 +56,18 @@ model_results
 
 ### Random Forest
 ```{r}
-tg <- data.table(expand.grid(mtry=15,
+if(file.exists("./saved_models/rf_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  rf_baseline_smote <- readRDS("./saved_models/rf_baseline_smote.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
                              splitrule='gini',
                              min.node.size=5))
 
-rf_baseline_smote <- pipeline_casero(smote_train_df, tunegrid=tg)
-saveRDS(rf_baseline_smote, "./saved_models/rf_baseline_smote.rds")
+  rf_baseline_smote <- pipeline_casero(smote_train_df, tunegrid=tg)
+  saveRDS(rf_baseline_smote, "./saved_models/rf_baseline_smote.rds")
+}
 
 model_results <- rbind(model_results, evaluate_model(model=rf_baseline_smote, holdout=holdout, "rf_baseline_smote"))
 
@@ -68,8 +78,12 @@ model_results
 
 ### XG Boost
 ```{r}
-# So many tuning parameters wow
-tg <- data.table(expand.grid(eta=0.4,
+if(file.exists("./saved_models/xgb_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  xgb_baseline_smote <- readRDS("./saved_models/xgb_baseline_smote.rds")
+} else {
+  # So many tuning parameters wow
+  tg <- data.table(expand.grid(eta=0.4,
                              max_depth='2',
                              nrounds=500,
                              gamma=10,
@@ -77,102 +91,229 @@ tg <- data.table(expand.grid(eta=0.4,
                              min_child_weight=5,
                              subsample=0.9))
 
-xgb_baseline_smote <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg)
-saveRDS(xgb_baseline_smote, "./saved_models/xgb_baseline_smote.rds")
+  xgb_baseline_smote <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg)
+  saveRDS(xgb_baseline_smote, "./saved_models/xgb_baseline_smote.rds")
+
+}
 
 model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, holdout=holdout, "xgb_baseline_smote"))
 
 model_results
 ```
 
+
+### Scaling for Tree-Based Models
+
+```{r}
+if(file.exists("./saved_models/rf_scaled.rds")) {
+  print("Model already trained, reading from file...")
+  rf_scaled <- readRDS("./saved_models/rf_scaled.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  
+  pp <- c(scale_df)
+  
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+
+  rf_scaled <- pipeline_casero(smote_train_df, preprocessing=pp, tunegrid=tg)
+  saveRDS(rf_scaled, "./saved_models/rf_scaled.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_scaled, holdout=scale_df(holdout), "rf_scaled"))
+
+model_results
+
+```
+
+```{r}
+if(file.exists("./saved_models/xgb_scaled.rds")) {
+  print("Model already trained, reading from file...")
+  xgb_scaled <- readRDS("./saved_models/xgb_scaled.rds")
+} else {
+  
+  pp <- c(scale_df)
+  
+  # So many tuning parameters wow
+  tg <- data.table(expand.grid(eta=0.4,
+                             max_depth='2',
+                             nrounds=500,
+                             gamma=10,
+                             colsample_bytree=0.5,
+                             min_child_weight=5,
+                             subsample=0.9))
+
+  xgb_scaled <- pipeline_casero(smote_train_df, model="xgbTree", preprocessing=pp, tunegrid=tg)
+  saveRDS(xgb_scaled, "./saved_models/xgb_scaled.rds")
+
+}
+
+model_results <- rbind(model_results, evaluate_model(model=xgb_scaled, holdout=scale_df(holdout), "xgb_scaled"))
+
+model_results
+```
+
+
+```{r}
+
+
+
+
+
+```
+
+
+
+
+
+
 ## Hyperparameter Tuning
 
 ### Random Forest
 
 ```{r}
-tg_RF <- data.table(expand.grid(mtry = 2:4,
+
+if(file.exists("./saved_models/rf_tuned.rds")) {
+  print("Model already trained, reading from file...")
+  rf_tuned <- readRDS("./saved_models/rf_tuned.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg_RF <- data.table(expand.grid(mtry = c(5, 10, 15),
                                 splitrule=c("gini", "extratrees"),
                                 min.node.size = c(1, 5, 10)))
                     
-rf_tuned <- pipeline_casero(smote_train_df, tunegrid=tg_RF)
+  rf_tuned <- pipeline_casero(smote_train_df, tunegrid=tg_RF)
 
-saveRDS(rf_tuned, "rf_tuned.rds")
+  saveRDS(rf_tuned, "./saved_models/rf_tuned.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_tuned, holdout=holdout, "rf_tuned"))
+
+model_results
 ```
+
+
+
+
 
 
 ### XG Boost
 
 ```{r}
-# Tuning Round 1
-nrounds <- 500
-tg_XG1 <- expand.grid(nrounds = seq(from = 200, to = nrounds, by = 50),
-                               eta = c(0.025, 0.05, 0.1, 0.3),
-                               max_depth = c(2, 3, 4, 5, 6),
-                               gamma = 0,
-                               colsample_bytree = 1,
-                               min_child_weight = 1,
-                               subsample = 1)
-
-xg_tuned1 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG1)
-
-# Tuning Round 2
-tg_XG2 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
-                               eta = xg_tuned1$bestTune$eta,
-                               max_depth = ifelse(xg_tuned1$bestTune$max_depth == 2,
-                                                  c(xg_tuned1$bestTune$max_depth:4),
-                                                  xg_tuned1$bestTune$max_depth - 1:xg_tuned1$bestTune$max_depth + 1),
-                               gamma = 0,
-                               colsample_bytree = 1,
-                               min_child_weight = c(1, 2, 3),
-                               subsample = 1)
-
-xg_tuned2 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG2)
-
-# Tuning Round 3
-tg_XG3 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
-                               eta = xg_tuned1$bestTune$eta,
-                               max_depth = xg_tuned2$bestTune$max_depth,
-                               gamma = 0,
-                               colsample_bytree = c(0.4, 0.6, 0.8, 1.0),
-                               min_child_weight = xg_tuned2$bestTune$min_child_weight,
-                               subsample = c(0.5, 0.75, 1.0))
-                   
-xg_tuned3 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG3)
-
-# Tuning Round 4
-tg_XG4 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
-                                eta = xg_tuned1$bestTune$eta,
-                                max_depth = xg_tuned2$bestTune$max_depth,
-                                gamma = c(0, 0.05, 0.1, 0.5, 0.7, 0.9, 1.0),
-                                colsample_bytree = xg_tuned3$bestTune$colsample_bytree,
-                                min_child_weight = xg_tuned2$bestTune$min_child_weight,
-                                subsample = xg_tuned3$bestTune$subsample)
-
-xg_tuned4 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG4)
-
-# Tuning Round 5
-tg_XG5 <- expand.grid(nrounds = seq(from = 100, to = 10000, by = 100),
-                                eta = c(0.01, 0.015, 0.025, 0.05, 0.1),
-                                max_depth = xg_tuned2$bestTune$max_depth,
-                                gamma = xg_tuned4$bestTune$gamma,
-                                colsample_bytree = xg_tuned3$bestTune$colsample_bytree,
-                                min_child_weight = xg_tuned2$bestTune$min_child_weight,
-                                subsample = xg_tuned3$bestTune$subsample)
-
-xg_tuned5 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG5)
-
-# Final Tuning Round
-final_grid <- expand.grid(nrounds = xg_tuned5$bestTune$nrounds,
-                                    eta = xg_tuned5$bestTune$eta,
-                                    max_depth = xg_tuned5$bestTune$max_depth,
-                                    gamma = xg_tuned5$bestTune$gamma,
-                                    colsample_bytree = xg_tuned5$bestTune$colsample_bytree,
-                                    min_child_weight = xg_tuned5$bestTune$min_child_weight,
-                                    subsample = xg_tuned5$bestTune$subsample)
-
-xg_final <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=final_grid)
-
-saveRDS(xg_final, "xg_final.rds")
+# # Tuning Round 1
+# if(file.exists("./saved_models/xg_tuned1.rds")) {
+#   print("Model already trained, reading from file...")
+#   xg_tuned1 <- readRDS("./saved_models/xg_tuned1.rds")
+# } else {
+#   nrounds <- 500
+#   tg_XG1 <- expand.grid(nrounds = seq(from = 200, to = nrounds, by = 50),
+#                                  eta = c(0.025, 0.05, 0.1, 0.3),
+#                                  max_depth = c(2, 3, 4, 5, 6),
+#                                  gamma = 0,
+#                                  colsample_bytree = 1,
+#                                  min_child_weight = 1,
+#                                  subsample = 1)
+#   
+#   xg_tuned1 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG1)
+# 
+# 
+#   saveRDS(xg_tuned1, "./saved_models/xg_tuned1.rds")
+# }
+# 
+# 
+# # Tuning Round 2
+# if(file.exists("./saved_models/xg_tuned2.rds")) {
+#   print("Model already trained, reading from file...")
+#   xg_tuned2 <- readRDS("./saved_models/xg_tuned2.rds")
+# } else {
+#   tg_XG2 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
+#                                eta = xg_tuned1$bestTune$eta,
+#                                max_depth = ifelse(xg_tuned1$bestTune$max_depth == 2,
+#                                                   c(xg_tuned1$bestTune$max_depth:4),
+#                                                   xg_tuned1$bestTune$max_depth - 1:xg_tuned1$bestTune$max_depth + 1),
+#                                gamma = 0,
+#                                colsample_bytree = 1,
+#                                min_child_weight = c(1, 2, 3),
+#                                subsample = 1)
+# 
+#   xg_tuned2 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG2)
+# 
+#   saveRDS(xg_tuned2, "./saved_models/xg_tuned2.rds")
+# }
+# 
+# 
+# # Tuning Round 3
+# if(file.exists("./saved_models/xg_tuned3.rds")) {
+#   print("Model already trained, reading from file...")
+#   xg_tuned3 <- readRDS("./saved_models/xg_tuned3.rds")
+# } else {
+#   tg_XG3 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
+#                                eta = xg_tuned1$bestTune$eta,
+#                                max_depth = xg_tuned2$bestTune$max_depth,
+#                                gamma = 0,
+#                                colsample_bytree = c(0.4, 0.6, 0.8, 1.0),
+#                                min_child_weight = xg_tuned2$bestTune$min_child_weight,
+#                                subsample = c(0.5, 0.75, 1.0))
+#                    
+#   xg_tuned3 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG3)
+#   
+#   saveRDS(xg_tuned3, "./saved_models/xg_tuned3.rds")
+# 
+# }
+# 
+# # Tuning Round 4
+# 
+# if(file.exists("./saved_models/xg_tuned4.rds")) {
+#   print("Model already trained, reading from file...")
+#   xg_tuned4 <- readRDS("./saved_models/xg_tuned4.rds")
+# } else {
+#   tg_XG4 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
+#                                 eta = xg_tuned1$bestTune$eta,
+#                                 max_depth = xg_tuned2$bestTune$max_depth,
+#                                 gamma = c(0, 0.05, 0.1, 0.5, 0.7, 0.9, 1.0),
+#                                 colsample_bytree = xg_tuned3$bestTune$colsample_bytree,
+#                                 min_child_weight = xg_tuned2$bestTune$min_child_weight,
+#                                 subsample = xg_tuned3$bestTune$subsample)
+# 
+#   xg_tuned4 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG4)
+#   
+#   saveRDS(xg_tuned4, "./saved_models/xg_tuned4.rds")
+# }
+# 
+# # Tuning Round 5
+# 
+# if(file.exists("./saved_models/xg_tuned5.rds")) {
+#   print("Model already trained, reading from file...")
+#   xg_tuned5 <- readRDS("./saved_models/xg_tuned5.rds")
+# } else {
+#   tg_XG5 <- expand.grid(nrounds = seq(from = 100, to = 10000, by = 100),
+#                                 eta = c(0.01, 0.015, 0.025, 0.05, 0.1),
+#                                 max_depth = xg_tuned2$bestTune$max_depth,
+#                                 gamma = xg_tuned4$bestTune$gamma,
+#                                 colsample_bytree = xg_tuned3$bestTune$colsample_bytree,
+#                                 min_child_weight = xg_tuned2$bestTune$min_child_weight,
+#                                 subsample = xg_tuned3$bestTune$subsample)
+# 
+#   xg_tuned5 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG5)
+# 
+#   
+#   saveRDS(xg_tuned5, "./saved_models/xg_tuned5.rds")
+# }
+# 
+# 
+# # Final Tuning Round
+# final_grid <- expand.grid(nrounds = xg_tuned5$bestTune$nrounds,
+#                                     eta = xg_tuned5$bestTune$eta,
+#                                     max_depth = xg_tuned5$bestTune$max_depth,
+#                                     gamma = xg_tuned5$bestTune$gamma,
+#                                     colsample_bytree = xg_tuned5$bestTune$colsample_bytree,
+#                                     min_child_weight = xg_tuned5$bestTune$min_child_weight,
+#                                     subsample = xg_tuned5$bestTune$subsample)
+# 
+# xg_final <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=final_grid)
+# 
+# saveRDS(xg_final, "xg_final.rds")
                                   
 ```
 

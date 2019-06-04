@@ -1,6 +1,8 @@
 evaluate_model <- function(model, holdout, model_name) {
+
+  cv_results <- model$results[model$results$Sensitivity==max(model$results$Sensitivity),
+                              c("AUC", "Sensitivity", "Specificity", "Precision", "Accuracy")]
   
-  cv_results <- model$results[c("AUC", "Sensitivity", "Specificity", "Precision", "Accuracy")]
   names(cv_results) <- paste0("cv_", c("AUC", "Sensitivity", "Specificity", "Precision", "Accuracy"))
 
   preds <- predict(model, holdout)
@@ -23,10 +25,14 @@ evaluate_model <- function(model, holdout, model_name) {
   confusion <- c(TP, FP, FN, TN)
   names(confusion) <- paste0("holdout_", c("TP", "FP", "FN", "TN"))
   
-  model_name <- c(model_name)
-  names(model_name) <- c("model_name")
+  model_name <- model_name
+  names(model_name) <- "model_name"
   
-  results <- c(model_name, holdout_results, cv_results)
+  best_params <- paste(paste(names(model$bestTune), sep=":", model$bestTune), collapse=", ")
+  names(best_params) <- "best_params"
+  
+  
+  results <- c(model_name, holdout_results, confusion, cv_results, best_params)
   
   return(results)
 }
