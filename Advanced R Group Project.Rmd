@@ -14,6 +14,7 @@ raw_bank_test <- fread("Data/BankCamp_test.csv")
 ```
 
 ## SMOTE
+As seen during the data exploration stage, the train data set has a relative imbalance with regards to the target variable (with the positive classification being the minority). If models were trained on this data as-is, there would be a greater bias towards the majority class leading to improper predictions (particularly a higher proportion of false negatives). To deal with this, the Synthetic Minority Oversampling Technique ("SMOTE") will be utilized. With the given parameters, 5 examples will be created of each original minority class. 
 ```{r}
 fixed_train_df <- fix_types(create_weekday(raw_bank_train))
 
@@ -30,6 +31,8 @@ fwrite(smote_train_df, file = "Data/smote_train.csv")
 
 
 ## Baselines
+For this classification task, logistic regression, the ranger implementation of Random Forest, and XG Boost were attempted. As can be seen, as-is the inclusion of a duration yields good results metrics (particularly sensitivity) at this early stage. However, as this would not realistically be available in production, it will be excluded from the model.
+
 ### Logit
 ```{r}
 
@@ -103,7 +106,7 @@ model_results
 
 # Remove Duration
 
-Duration is not something we would have at time of prediction, so using it is cheating. This repeats the process above but on SMOTE-d data that excludes the duration feature.
+As previously stated, duration is not something we would have at time of prediction, so using it would be considered cheating. These next steps repeat the above processes but on data generated via SMOTE that excludes the duration feature.
 
 ## SMOTE
 ```{r}
@@ -114,7 +117,7 @@ train_test <- f_partition(fixed_train_df, test_proportion=0.1, seed=20190603)
 train_to_smote <- train_test$train
 holdout <- train_test$test
 
-smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
+smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500, perc.under = 0)
 print(summary(smote_train_df))
 
 fwrite(smote_train_df, file = "Data/smote_train_no_duration.csv")
@@ -122,9 +125,10 @@ fwrite(smote_train_df, file = "Data/smote_train_no_duration.csv")
 
 
 ## Baselines
+Once again, baseline models are run though this time without the inclusion of the duration variable. As can be seen below, the sensitivity metric drops quite drastically with logistic regression having the highest value at this stage. Due to poor performance, the XG Boost will be excluded.
+
 ### Logit
 ```{r}
-
 if(file.exists("./saved_models/no_duration/no_duration/logit_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
   logit_baseline_smote <- readRDS("./saved_models/no_duration/logit_baseline_smote.rds")
@@ -194,6 +198,8 @@ model_results
 
 
 ### Scaling for Tree-Based Models
+In this stage, scaling is applied to the data and run using the tree-based models. Although this results in very high sensitivity, this is at the expense of the other metrics which fall drastically. This outcome is due to the models predicting essentially all observations in the positive class (meaning that nearly all positives are correctly identified with nearly all negatives incorrectly identified)
+
 #### Random Forest
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_scaled.rds")) {
@@ -254,6 +260,7 @@ model_results
 ###########################################################################################################################
 
 ### FE1: Drop Day
+The first engineered feature attempted was dropping the day column.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -274,6 +281,7 @@ model_results
 
 
 ### FE2: Drop Pdays
+The second engineered feature attempted was dropping the pdays column.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -296,6 +304,7 @@ model_results
 
 
 ### FE3: Combined
+The third engineered feature attempted was dropping the both days and pdays column.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_day_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -323,6 +332,7 @@ model_results
 ###########################################################################################################################
 
 ### FE1: Drop Day
+The first engineered feature attempted was dropping the day column.
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -346,6 +356,7 @@ model_results
 
 
 ### FE2: Drop Pdays
+The second engineered feature attempted was dropping the pdays column.
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -392,6 +403,7 @@ model_results
 
 
 ### FE3: Drop Day
+The third engineered feature attempted was dropping the both days and pdays column.
 ```{r}
 if(file.exists("./saved_models/no_duration/xgb_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -422,6 +434,7 @@ model_results
 ###########################################################################################################################
 
 ### FE4: Cluster
+The fourth engineered feature created 4 clusters based on the age, balance, and total_contact (campaigns + previous).
 ```{r}
 clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
 
@@ -447,6 +460,7 @@ model_results
 
 
 ### FE5: Cluster and Drop Day
+The fifth engineered feature combines the previous clustering feature and dropping the day column.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_cluster_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -468,11 +482,13 @@ model_results <- rbind(model_results, evaluate_model(model=logit_cluster_drop_da
 model_results
 ```
 
+
 ###################################################### Random Forest ######################################################
 ###########################################################################################################################
 ###########################################################################################################################
 
 ### FE4: Cluster
+The fourth engineered feature created 4 clusters based on the age, balance, and total_contact (campaigns + previous).
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_cluster.rds")) {
   print("Model already trained, reading from file...")
@@ -497,6 +513,7 @@ model_results
 
 
 ### FE5: Cluster and Drop Day
+The fifth engineered feature combines the previous clustering feature and dropping the day column.
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day_cluster.rds")) {
   print("Model already trained, reading from file...")
@@ -522,6 +539,7 @@ model_results
 
 ## Hyperparameter Tuning
 ### Random Forest
+The hyperparameters to be tuned for the Ranger implementation will be mtry (the number of variables that can split a node), splitrule (using gini [information gain] or extratrees [randomly chosen cut points]), and the minimum node size.
 ```{r}
 
 if(file.exists("./saved_models/no_duration/rf_tuned.rds")) {
