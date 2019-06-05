@@ -7,3 +7,5 @@ Our worked is divided into two parts: Data exploration and modelling (including 
 But before we go into the project itself, lets introduce our team tackled this problem by dividing the machine learning process into three different workstreams:
 
 Data exploration and visualization: Christine, Victor, Celine -- Data engineering: Tomas, Theo -- Modelling - Dan, Andrew
+
+![Team](https://github.com/martinan92/Advanced-R-Group-Project/blob/master/R-Team.png)
