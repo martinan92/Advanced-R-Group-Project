@@ -89,3 +89,29 @@ remove_outliers <- function(df, n = 1.5){
 }
 
 
+num_combinations <- function(df){
+  df1 <- data.table(df)
+  
+  #products
+  df1$p_campaign_previous <- df1$campaign * df1$previous
+  df1$p_balance_campaign <- df1$balance * df1$campaign
+  df1$p_campaign_age <- df1$campaign * df1$age
+  df1$p_balance_previous <- df1$balance * df1$previous
+  df1$p_balance_age <- df1$balance * df1$age
+  df1$age_previous <- df1$age * df1$previous
+  
+  #sums
+  df1$s_campaign_age <- df1$campaign + df1$age
+  df1$s_campaing_previous <- df1$campaign + df1$previous
+  
+  #non-linear
+  df1$balance_sq <- df1$balance * df1$balance
+  df1$balance_log <- log(df1$balance)
+  df1$balance_sqrt <- sqrt(df1$balance)
+  df1$age_sq <- df1$age * df1$age
+  df1$age_log <- log(df1$age)
+  df1$age_sqrt <- sqrt(df1$age)
+  df1$previous_sq <- df1$previous * df1$previous
+    
+    
+}
