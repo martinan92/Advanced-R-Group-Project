@@ -473,9 +473,32 @@ grid.arrange(poutcome_train, poutcome_test, ncol=2)
 
 ## 5. Correlation plot 
 
-```{r correlation matrix for continuous variables}
+
+```{r correlation matrix for continuous variables, message=FALSE, warning=FALSE}
 correlation <- cor(cont_var)
-corrplot(correlation, method ="number", type = "upper")
+
+p <- plot_ly(
+  x = continuous_var,
+  y=continuous_var,
+  z = correlation,
+  type = "heatmap",
+  colorscale=list(c(0, "rgb(0,0,255)"),
+                  list(0.1, "rgb(51,153,255)"),
+                  list(0.2, "rgb(102,204,255)"),
+                  list(0.3, "rgb(153,204,255)"),
+                  list(0.4, "rgb(204,204,255)"),
+                  list(0.5, "rgb(255,255,255)"),
+                  list(0.6, "rgb(255,204,255)"),
+                  list(0.7, "rgb(255,153,255)"),
+                  list(0.8, "rgb(255,102,204)"),
+                  list(0.9, "rgb(255,102,102)"),
+                  list(1, "rgb(255,0,0)")),
+  title = "Correlation Matrix"
+)
+
+p <- layout(p, title="Continuous Variable Correlations")
+
+p
 ```
 
 ## 6. Outlier Analysis 
