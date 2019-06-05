@@ -4,10 +4,18 @@ author: "O1 R Masters :)"
 date: "06 June 2019"
 output: html_document
 ---
+Welcome to our advanced R project working on a marketing campaign data set focussing on term deposit offers! This project focuses on the classification problem that a Portugese bank was facing, which can be found under following [link](https://archive.ics.uci.edu/ml/datasets/bank+marketing#). The bank wanted to know which customers are more likely to accept a term deposit offer in a telemarketing campaign. Thus a predicitive model to answer this question is created in order to optimize the bank's marketing resources. The general idea behind this is that it is preferrable to call customers that are more likely to accept the offer because each call means marketing cost and with such a predicitive model not only cost can be controlled better but also the actual return on the marketing campaign can be improved.
+
+Our worked is divided into two parts: Data exploration and modelling (including feature engineering). Thus two markdowns are provided to give a better overview.
+
+But before we go into the project itself, lets introduce our team tackled this problem by dividing the machine learning process into three different workstreams:
+
+1. Data exploration and visualization: Christine, Victor, Celine -- 2. Data engineering: Tomas, Theo -- 3. Modelling - Dan, Andrew
 
 ![O1 R Masters :)](Team.jpeg)
 
-## 0. Source loading
+##### Source loading
+Before we start with the first part of our project, which is data exploration, we load the required R libraries from a separate R script called "libraries".
 
 ```{r, warning=FALSE, message=FALSE}
 source('notebooks/libraries.R')
@@ -15,7 +23,43 @@ source('notebooks/libraries.R')
 
 ## 1. Data set
 
+We were provided with two data sets. The first is a train data set, which includes the actual outcome of the marketing activity for each contacted customer (labeled train data set). The second is a "blind" test data set that does not include the actual outcome of the campaign. At the end of our project we will use our best model to make predictions on this test data set. One can imagine this like putting the model into production a feeding it with new data in order to predict which customers will accept the offer and which will not. The overall data set contains 45,211 rows and the original data set can be found in the UCI Machine Learning Repository. It is important to note that the data sets we were provided with are not 100% the same compared to the repository. Some of the features from the repository are not included here while other features such as balance, educatio,  day are added or transformed. However we know based on the information on the data set provided that the data covers activities from from May 2008 to November 2010. Comparing the size of the train and the blind test set we see that the over all data set was split into 80% train and 20% test.
+
+The provided data sets contain general as well as banking specific information about each contacted client. Such data can usually be found in the CRM system of a bank. The bank intends to use this data in order to identify patterns that a related to the likeliness of a customer responding positive to the offered marketing campaign. It is important to notice that this campaign using phone calls is about a term deposit offer. A term deposit is a specific banking product that is a fixed-term investment that includes the deposit of money into an account at a financial institution. Term deposit investments usually carry short-term maturities ranging from one month to a few years and will have varying levels of required minimum deposits. Thus the developed predicted model should only be used for marketing campaigns around term deposits since the same customer can respond completly different when he is offered a different banking product such as a over draft protection or a loan.
+
+Now that we know what the data set is about in general let us take a closer look at it and see what it actually contains in terms of features.
+
 ### 1.1 Data loading
+
+Both data sets include the same 16 features while the train set contains an additional column storing the outcome of the marketing campaign, which represents our target variable. Since the target variable is either yes (term deposit offer accepted) ot no (term deposit offer not accepted), we are facing a binary classification problem.
+
+The next step is to take a closer look at the provided features.
+
+#### Feature overview
+
+1. age (numeric)
+2. job : type of job (categorical: 'admin.','blue-collar','entrepreneur','housemaid','management','retired','self-employed','services','student','technician','unemployed','unknown')
+3. marital : marital status (categorical: 'divorced','married','single')
+4. education (categorical: 'primary','secondary','tertiary','unknown')
+5. default: has credit in default? (categorical: 'no','yes')
+6. balance: current account balance (numeric)
+7. housing: has housing loan? (categorical: 'no','yes')
+8. loan: has personal loan? (categorical: 'no','yes','unknown')
+
+###### Related with the last contact of the current campaign:
+9. contact: contact communication type (categorical: 'cellular','telephone', 'unknown') 
+10. month: last contact month of year (categorical: 'jan', 'feb', 'mar', ..., 'nov', 'dec')
+11. day: day within the month from last contact (numeric: 1, 2, 3, ...., 30, 31)
+12. duration: last contact duration, in seconds (numeric). _Important note: this attribute highly affects the output target (e.g., if duration=0 then y='no'). Yet, the duration is not known before a call is performed. Also, after the end of the call y is obviously known. Thus, this input should only be included for benchmark purposes and should be discarded if the intention is to have a realistic predictive model._
+
+###### Other attributes:
+13. campaign: number of contacts performed during this campaign and for this client (numeric, includes last contact)
+14. pdays: number of days that passed by after the client was last contacted from a previous campaign (numeric; 999 means client was not previously contacted)
+15. previous: number of contacts performed before this campaign and for this client (numeric)
+16. poutcome: outcome of the previous marketing campaign (categorical: 'failure','other','success', 'unknown')
+
+###### Output variable (desired target):
+17. y: has the client subscribed a term deposit? (binary: 'yes','no')
 
 ```{r}
 raw_train_data<-fread('Data/BankCamp_train.csv', stringsAsFactors = F)
@@ -26,6 +70,7 @@ str(raw_test_data)
 ```
 
 #### Classifying the variables between discrete and continuous variables 
+For our following data exploration we are creating two different vectors, one that stores all the features that are categorical and one with the numeric/continuous features.
 
 ```{r variable classification}
 discrete_var<-c("job", "marital", "education", "default", "housing", "loan","contact", "month", "poutcome")
@@ -35,17 +80,19 @@ continuous_var<-c("age", "balance","day", "duration", "campaign", "pdays", "prev
 
 ## 2. Target distribution 
 
+First of all we take a look how our target is distributed. This means looking at how many of the contacted customers accepted the offer compared to how many did not. We see here that most of the customers did not accept the offer (88.4%). Only 11.6% of the customers that were contacted actually accepted the offer. If we assume that the customers were contacted randomly without any preselection, we can say that only one out of nine customers accept the offer.
+
+This insight is very important for our later machine learning model. Because if we would predict all of the customers are a 'no' we would end up with an accuracy of almost 90%. Also if 'no' is defined as the positive class and we predict all of the rows as 'no' we end up with very high sensitivity results (True positives/[True positives+False negatives]). However, the idea behind this model is to identify customers that are more likely to accept our offer and thus we need not only to define 'yes' as the positive class but also use a sampling method to train our model due to the high class imbalance.
+
 ```{r target distribution}
 target_dist<-ggplot(raw_train_data, aes(y, fill=y))+
-              geom_bar()+
-              scale_fill_manual(values=c("#995052", "#529950"))+
-              theme_minimal() +
-              xlab("target - campaign offer accepted")+
-              ggtitle("Distribution of target variable") +
-              theme(text = element_text(face = "bold"),
-              legend.position = "none",
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank(),
+              geom_bar() + scale_fill_manual(values=c("#995052", "#529950")) +
+              xlab("Campaign offer accepted")+
+              geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
+              position=position_dodge(1), size=3, vjust = -.5)+
+              ggtitle("Distribution of target variable") + theme_minimal() + 
+              theme(text = element_text(face = "bold"), legend.position = "none",
+              panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               plot.title = element_text(hjust = 0.5))
 target_dist
 ```
@@ -53,6 +100,8 @@ target_dist
 
 
 ## 3. Distribution of the continous variables 
+
+The next step is to look at the distribution of our features. This helps us to identify if some variables are skewed or unbalanced. We will start in this case with continous variables and look at the quintiles (including min and max), the mean and the standard deviation. This helps us especially when looking at the minimum to identify special cases such as pdays -1 compared to only looking at the histograms.
 
 ```{r distribution table for continuous variables}
 cont_var <- as.data.frame(raw_train_data)
@@ -65,7 +114,7 @@ datatable(round(distribution, 2))
 
 ### 3.1 Overview of the distribution of all the continuous variables 
 
-```{r distribution of continuous variables, message=FALSE, warning=FALSE}
+```{r distribution of continuous variables, message=FALSE, warning=FALSE, fig.width=11.5}
 cont_var_melt <- as.data.frame(melt(cont_var))
 
 cont_dist <- ggplot(cont_var_melt, aes(value)) +
@@ -104,70 +153,70 @@ dataset <- rbind(raw_train_data, raw_test_data)
 
 #### Age 
 
-```{r Distribution of Age Variable}
+```{r Distribution of Age Variable, fig.width=11.5}
 
 ggplot(dataset, aes(x=age, color = dataType)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Age Distribution") + theme_classic() +
         scale_color_manual(values=c("#e08926", "#3526e0"))
 ```
 
 #### Balance
 
-```{r Distribution of Balance Variable }
+```{r Distribution of Balance Variable, fig.width=11.5}
 
 ggplot(dataset, aes(x=balance, color = dataType)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Balance Distribution") + theme_classic() +
         scale_color_manual(values=c("#e08926", "#3526e0"))
 ```
  
 #### Day
  
-```{r Distribution of Day Variable}
+```{r Distribution of Day Variable, fig.width=11.5}
 
 ggplot(dataset, aes(x=day, color = dataType)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Day Distribution") + theme_classic() +
         scale_color_manual(values=c("#e08926", "#3526e0"))
 ```
 
 #### Duration
 
-```{r Distribution of Duration Variable}
+```{r Distribution of Duration Variable, fig.width=11.5}
 
 ggplot(dataset, aes(x=duration, color = dataType)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Duration Distribution") + theme_classic() +
         scale_color_manual(values=c("#e08926", "#3526e0"))
 ```
 
 #### Campaign
 
-```{r Distribution of Campaign Variable}
+```{r Distribution of Campaign Variable, fig.width=11.5}
  
 ggplot(dataset, aes(x=campaign, color = dataType)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Campaign Distribution") + theme_classic() +
         scale_color_manual(values=c("#e08926", "#3526e0"))
 ```
 
 #### pdays
 
-```{r Distribution of pdays variable}
+```{r Distribution of pdays variable, fig.width=11.5}
 
 ggplot(dataset, aes(x=pdays, color = dataType)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("pdays Distribution") + theme_classic() +
         scale_color_manual(values=c("#e08926", "#3526e0"))
 ```
 
 #### previous
 
-```{r Distribution of previous variable}
+```{r Distribution of previous variable, fig.width=11.5}
 
 ggplot(dataset, aes(x=previous, color = dataType)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Previous Distribution") + theme_classic() +
         scale_color_manual(values=c("#e08926", "#3526e0"))
 
@@ -177,7 +226,7 @@ ggplot(dataset, aes(x=previous, color = dataType)) +
 
 ### 4.1 Overview of the distribution of the discrete variables 
 
-```{r Distribution of Discrete Variables}
+```{r Distribution of Discrete Variables, fig.width=11.5}
 df_disc <- raw_train_data[, ..discrete_var]
 df_disc <- sapply(df_disc, as.factor)
 df_disc <- as.data.frame(melt(df_disc))
@@ -207,7 +256,7 @@ disc_dist
 
 #### Job 
 
-```{r Distribution of Job variable}
+```{r Distribution of Job variable, fig.width=11.5}
 job_train <- ggplot(raw_train_data, aes(x=job)) +
         geom_bar(fill ="#3526e0") +
         ggtitle("Job Distribution - Train") + labs(y = "", x="") + theme_minimal() + 
@@ -230,7 +279,7 @@ grid.arrange(job_train, job_test, ncol=2)
 
 #### Marital 
 
-```{r Distribution of Marital variable}
+```{r Distribution of Marital variable, fig.width=11.5}
 marital_train <- ggplot(raw_train_data, aes(x=marital)) +
         geom_bar(fill ="#3526e0") + ggtitle("Marital Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
@@ -254,7 +303,7 @@ grid.arrange(marital_train, marital_test, ncol=2)
 
 #### Education 
 
-```{r Distribution of Education variable}
+```{r Distribution of Education variable, fig.width=11.5}
 education_train <- ggplot(raw_train_data, aes(x=education)) +
         geom_bar(fill ="#3526e0") + ggtitle("Education Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
@@ -278,7 +327,7 @@ grid.arrange(education_train, education_test, ncol=2)
 
 #### Default 
 
-```{r Distribution of Default variable}
+```{r Distribution of Default variable, fig.width=11.5}
 default_train <- ggplot(raw_train_data, aes(x=default)) +
         geom_bar(fill ="#3526e0") + ggtitle("Default Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
@@ -302,7 +351,7 @@ grid.arrange(default_train, default_test, ncol=2)
 
 #### Housing 
 
-```{r Distribution of Housing variable}
+```{r Distribution of Housing variable, fig.width=11.5}
 housing_train <- ggplot(raw_train_data, aes(x=housing)) +
         geom_bar(fill ="#3526e0") + ggtitle("Housing Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() +    theme(text = element_text(face = "plain"),
@@ -326,7 +375,7 @@ grid.arrange(housing_train, housing_test, ncol=2)
 
 #### Loan 
 
-```{r Distribution of Loan variable}
+```{r Distribution of Loan variable, fig.width=11.5}
 loan_train <- ggplot(raw_train_data, aes(x=loan)) +
         geom_bar(fill ="#3526e0") + ggtitle("Loan Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
@@ -350,7 +399,7 @@ grid.arrange(loan_train, loan_test, ncol=2)
 
 #### Contact 
 
-```{r Distribution of Contact variable}
+```{r Distribution of Contact variable, fig.width=11.5}
 contact_train <- ggplot(raw_train_data, aes(x=contact)) +
         geom_bar(fill ="#3526e0") + ggtitle("Contact Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
@@ -374,7 +423,7 @@ grid.arrange(contact_train, contact_test, ncol=2)
 
 #### Month 
 
-```{r Distribution of Month variable}
+```{r Distribution of Month variable, fig.width=11.5}
 month_train <- ggplot(raw_train_data, aes(x=month)) +
         geom_bar(fill ="#3526e0") + ggtitle("Month Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
@@ -398,7 +447,7 @@ grid.arrange(month_train, month_test, ncol=2)
 
 #### Previous campaign
 
-```{r Distribution of poutcome variable}
+```{r Distribution of poutcome variable, fig.width=11.5}
 poutcome_train <- ggplot(raw_train_data, aes(x=poutcome)) +
         geom_bar(fill ="#3526e0") + ggtitle("poutcome Distribution - Train") + 
         labs(y = "", x="") + theme_minimal() + theme(text = element_text(face = "plain"),
@@ -433,7 +482,7 @@ corrplot(correlation, method ="number", type = "upper")
 
 #### Continuous Variables 
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, fig.width=11.5}
 
 cont_box <- ggplot(cont_var_melt, aes(variable, value)) +
           geom_boxplot(aes(fill = variable)) +
@@ -450,12 +499,11 @@ cont_box <- ggplot(cont_var_melt, aes(variable, value)) +
                             
                       
 cont_box
-
 ```
 
 #### Continuous Scaled Variables 
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, fig.width=11.5}
 
 df_cont_norm <- raw_train_data[,..continuous_var]
 df_cont_norm <- as.data.frame(apply(df_cont_norm, 2,function(x)((x - min(x))/(max(x)-min(x)))))
@@ -476,12 +524,11 @@ cont_box_norm <- ggplot(df_cont_norm, aes(variable, value)) +
                             
                       
 cont_box_norm
-
 ```
 
 #### Discrete Variables
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, fig.width=11.5}
 
 disc_box <- ggplot(df_disc, aes(Var2, as.numeric(value))) +
                 geom_boxplot(aes(fill = Var2)) +
@@ -512,10 +559,10 @@ disc_box
 
 #### Age 
 
-```{r Target Distribution of Age Variable}
+```{r Target Distribution of Age Variable, fig.width=11.5}
 
 ggplot(raw_train_data, aes(x=age, color = y)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Age Target Distribution") + theme_classic() + 
         labs(color = "Offer accepted") +
         scale_color_manual(values=c("#995052", "#529950"))
@@ -523,10 +570,10 @@ ggplot(raw_train_data, aes(x=age, color = y)) +
 
 #### Balance
 
-```{r Target Distribution of Balance Variable }
+```{r Target Distribution of Balance Variable, fig.width=11.5}
 
 ggplot(raw_train_data, aes(x=balance, color = y)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Balance Target Distribution") + theme_classic() +
         labs(color = "Offer accepted") +
         scale_color_manual(values=c("#995052", "#529950"))
@@ -534,10 +581,10 @@ ggplot(raw_train_data, aes(x=balance, color = y)) +
  
 #### Day
  
-```{r Target Distribution of Day Variable}
+```{r Target Distribution of Day Variable, fig.width=11.5}
 
 ggplot(raw_train_data, aes(x=day, color = y)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Day Target Distribution") + theme_classic() +
         labs(color = "Offer accepted") +
         scale_color_manual(values=c("#995052", "#529950"))
@@ -545,10 +592,10 @@ ggplot(raw_train_data, aes(x=day, color = y)) +
 
 #### Duration
 
-```{r Target Distribution of Duration Variable}
+```{r Target Distribution of Duration Variable, fig.width=11.5}
 
 ggplot(raw_train_data, aes(x=duration, color = y)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Duration Target Distribution") + theme_classic() +
         labs(color = "Offer accepted") +
         scale_color_manual(values=c("#995052", "#529950"))
@@ -556,10 +603,10 @@ ggplot(raw_train_data, aes(x=duration, color = y)) +
 
 #### Campaign
 
-```{r Target Distribution of Campaign Variable}
+```{r Target Distribution of Campaign Variable, fig.width=11.5}
  
 ggplot(raw_train_data, aes(x=campaign, color = y)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Campaign Target Distribution") + theme_classic() +
         labs(color = "Offer accepted") +
         scale_color_manual(values=c("#995052", "#529950"))
@@ -567,10 +614,10 @@ ggplot(raw_train_data, aes(x=campaign, color = y)) +
 
 #### pdays
 
-```{r Target Distribution of pdays variable}
+```{r Target Distribution of pdays variable, fig.width=11.5}
 
 ggplot(raw_train_data, aes(x=pdays, color = y)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("pdays Target Distribution") + theme_classic() +
         labs(color = "Offer accepted") +
         scale_color_manual(values=c("#995052", "#529950"))
@@ -578,14 +625,13 @@ ggplot(raw_train_data, aes(x=pdays, color = y)) +
 
 #### previous
 
-```{r Target Distribution of previous variable}
+```{r Target Distribution of previous variable, fig.width=11.5}
 
 ggplot(raw_train_data, aes(x=previous, color = y)) +
-        geom_density(alpha = 0.7) +
+        geom_density(alpha = 0.7, size=1.5) +
         ggtitle("Previous Target Distribution") + theme_classic() +
         labs(color = "Offer accepted") +
         scale_color_manual(values=c("#995052", "#529950"))
-
 ```
 
 
@@ -593,36 +639,30 @@ ggplot(raw_train_data, aes(x=previous, color = y)) +
 
 #### Job
 
-```{r target distribution for job}
+```{r target distribution for job, fig.width=11.5}
  ggplot(raw_train_data,mapping = aes(job,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
 ```
 
 #### Marital
 
-```{r target distribution for marital}
+```{r target distribution for marital, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(marital,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
 ```
 
 #### Education
 
 
-```{r target disrtribution for education}
+```{r target disrtribution for education, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(education,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
@@ -636,89 +676,66 @@ ggplot(raw_train_data,mapping = aes(education,fill=y))+
 
 #### Default
 
-```{r target distribution for default}
+```{r target distribution for default, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(default,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
-
 ```
 
 #### Housing
 
-```{r target distribution for housing}
+```{r target distribution for housing, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(housing,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
-
 ```
 
 #### Loan
 
-```{r target distribution for loan}
+```{r target distribution for loan, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(loan,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
-
 ```
 
 #### Contact
 
-```{r target distribution for contact}
+```{r target distribution for contact, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(contact,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
 ```
 
 #### Month
 
-```{r target distribution for month}
+```{r target distribution for month, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(month,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
-
 ```
 
 #### Previous campaign
 
-```{r target distribution for poutcome}
+```{r target distribution for poutcome, fig.width=11.5}
 ggplot(raw_train_data,mapping = aes(poutcome,fill=y))+
   geom_bar(col="black", position = position_dodge(1))+
   geom_text(stat="count",aes(label=scales::percent((..count..)/sum(..count..))),
             position=position_dodge(1), size=3, vjust = -.5)+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
-
-
-
-
 ```
