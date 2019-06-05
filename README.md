@@ -8,6 +8,6 @@ But before we go into the project itself, lets introduce our team tackled this p
 
 -- Data exploration and visualization: Christine, Victor, Celine <br /> 
 -- Data engineering: Tomas, Theo <br />
--- Modelling - Dan, Andrew
+-- Modelling: Dan, Andrew
 
 ![Team](https://github.com/martinan92/Advanced-R-Group-Project/blob/master/R-Team.png)
