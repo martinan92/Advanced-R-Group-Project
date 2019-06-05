@@ -101,398 +101,6 @@ model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, h
 model_results
 ```
 
-
-### Scaling for Tree-Based Models
-
-```{r}
-if(file.exists("./saved_models/rf_scaled.rds")) {
-  print("Model already trained, reading from file...")
-  rf_scaled <- readRDS("./saved_models/rf_scaled.rds")
-} else {
-  print("Saved model not found, starting training process...")
-  
-  pp <- c(scale_df)
-  
-  tg <- data.table(expand.grid(mtry=15,
-                             splitrule='gini',
-                             min.node.size=5))
-
-  rf_scaled <- pipeline_casero(smote_train_df, preprocessing=pp, tunegrid=tg)
-  saveRDS(rf_scaled, "./saved_models/rf_scaled.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=rf_scaled, holdout=scale_df(holdout), "rf_scaled"))
-
-model_results
-
-```
-
-```{r}
-if(file.exists("./saved_models/xgb_scaled.rds")) {
-  print("Model already trained, reading from file...")
-  xgb_scaled <- readRDS("./saved_models/xgb_scaled.rds")
-} else {
-  
-  pp <- c(scale_df)
-  
-  # So many tuning parameters wow
-  tg <- data.table(expand.grid(eta=0.4,
-                             max_depth='2',
-                             nrounds=500,
-                             gamma=10,
-                             colsample_bytree=0.5,
-                             min_child_weight=5,
-                             subsample=0.9))
-
-  xgb_scaled <- pipeline_casero(smote_train_df, model="xgbTree", preprocessing=pp, tunegrid=tg)
-  saveRDS(xgb_scaled, "./saved_models/xgb_scaled.rds")
-
-}
-
-model_results <- rbind(model_results, evaluate_model(model=xgb_scaled, holdout=scale_df(holdout), "xgb_scaled"))
-
-model_results
-```
-logit_removed_features           0.7471264          0.85355123         0.4108723        0.8407520 (drop_day)
-logit_removed_features           0.3678161          0.87617850         0.2888087        0.8150401 (drop_duration)
-logit_removed_features           0.7379310          0.85606537         0.4120668        0.8418579 (drop_pdays)
-logit_removed_features           0.7448276           0.8582652         0.4180645        0.8446226 (drop_day and drop_pdays)
-
-```{r}
-if(file.exists("./saved_models/logit_drop_day.rds")) {
-  print("Model already trained, reading from file...")
-  logit_drop_day <- readRDS("./saved_models/logit_drop_day.rds")
-} else { 
-  print("Saved model not found, starting training process...")
-  pp <- c(scale_df)
-  fs <- c(drop_day)
-  logit_drop_day <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
-  saveRDS(logit_drop_day, "./saved_models/logit_drop_day.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=logit_drop_day, holdout=scale_df(holdout), "logit_drop_day"))
-
-model_results
-
-```
-
-```{r}
-if(file.exists("./saved_models/logit_drop_pdays.rds")) {
-  print("Model already trained, reading from file...")
-  logit_drop_pdays <- readRDS("./saved_models/logit_drop_pdays.rds")
-} else { 
-  print("Saved model not found, starting training process...")
-  pp <- c(scale_df)
-  fs <- c(drop_pdays)
-  logit_drop_pdays <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
-  saveRDS(logit_drop_pdays, "./saved_models/logit_drop_pdays.rds")
-}
-
-model_results <- rbind(model_results,
-                       evaluate_model(model=logit_drop_pdays,
-                                      holdout=scale_df(holdout),
-                                      "logit_drop_pdays"))
-
-model_results
-```
-
-
-```{r}
-if(file.exists("./saved_models/logit_drop_day_pdays.rds")) {
-  print("Model already trained, reading from file...")
-  logit_drop_day_pdays <- readRDS("./saved_models/logit_drop_day_pdays.rds")
-} else { 
-  print("Saved model not found, starting training process...")
-  pp <- c(scale_df)
-  fs <- c(drop_day, drop_pdays)
-  logit_drop_day_pdays <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
-  saveRDS(logit_drop_day_pdays, "./saved_models/logit_drop_day_pdays.rds")
-}
-
-model_results <- rbind(model_results,
-                       evaluate_model(model=logit_drop_day_pdays,
-                                      holdout=scale_df(holdout),
-                                      "logit_drop_day_pdays"))
-
-model_results
-
-```
-
-
-```{r}
-if(file.exists("./saved_models/rf_drop_day.rds")) {
-  print("Model already trained, reading from file...")
-  rf_drop_day <- readRDS("./saved_models/rf_drop_day.rds")
-} else {
-  print("Saved model not found, starting training process...")
-  tg <- data.table(expand.grid(mtry=15,
-                             splitrule='gini',
-                             min.node.size=5))
-  
-  fs <- c(drop_day)
-
-  rf_drop_day <- pipeline_casero(smote_train_df, tunegrid=tg, selection=fs)
-  saveRDS(rf_drop_day, "./saved_models/rf_drop_day.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=rf_drop_day, holdout=holdout, "rf_drop_day"))
-
-model_results
-```
-```{r}
-if(file.exists("./saved_models/rf_drop_day_pdays.rds")) {
-  print("Model already trained, reading from file...")
-  rf_drop_day_pdays <- readRDS("./saved_models/rf_drop_day_pdays.rds")
-} else {
-  print("Saved model not found, starting training process...")
-  tg <- data.table(expand.grid(mtry=15,
-                             splitrule='gini',
-                             min.node.size=5))
-  
-  fs <- c(drop_day, drop_pdays)
-
-  rf_drop_day_pdays <- pipeline_casero(smote_train_df, tunegrid=tg, selection=fs)
-  saveRDS(rf_drop_day_pdays, "./saved_models/rf_drop_day_pdays.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=rf_drop_day_pdays, holdout=holdout, "rf_drop_day_pdays"))
-
-model_results
-```
-
-
-
-```{r}
-if(file.exists("./saved_models/xgb_drop_day.rds")) {
-  print("Model already trained, reading from file...")
-  xgb_drop_day <- readRDS("./saved_models/xgb_drop_day.rds")
-} else {
-  # So many tuning parameters wow
-  tg <- data.table(expand.grid(eta=0.4,
-                             max_depth='2',
-                             nrounds=500,
-                             gamma=10,
-                             colsample_bytree=0.5,
-                             min_child_weight=5,
-                             subsample=0.9))
-
-  xgb_drop_day <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg)
-  saveRDS(xgb_drop_day, "./saved_models/xgb_drop_day.rds")
-
-}
-
-model_results <- rbind(model_results, evaluate_model(model=xgb_drop_day, holdout=holdout, "xgb_drop_day"))
-
-model_results
-```
-
-
-```{r}
-
-clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
-
-if(file.exists("./saved_models/logit_cluster_drop_day.rds")) {
-  print("Model already trained, reading from file...")
-  logit_cluster_drop_day <- readRDS("./saved_models/logit_cluster_drop_day.rds")
-} else { 
-  print("Saved model not found, starting training process...")
-  pp <- c(scale_df)
-  
-  fs <- c(drop_day)
-  
-  logit_cluster_drop_day <- pipeline_casero(clustered$train, preprocessing=pp, selection=fs, model="glm")
-  saveRDS(logit_cluster_drop_day, "./saved_models/logit_cluster_drop_day.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=logit_cluster_drop_day,
-                                                     holdout=scale_df(clustered$test),
-                                                     "logit_cluster_drop_day"))
-
-model_results
-```
-
-```{r}
-
-clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
-
-if(file.exists("./saved_models/rf_cluster.rds")) {
-  print("Model already trained, reading from file...")
-  rf_cluster <- readRDS("./saved_models/rf_cluster.rds")
-} else {
-  print("Saved model not found, starting training process...")
-  
-  tg <- data.table(expand.grid(mtry=15,
-                             splitrule='gini',
-                             min.node.size=5))
-  
-  clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
-
-  rf_cluster <- pipeline_casero(clustered$train, tunegrid=tg)
-  saveRDS(rf_cluster, "./saved_models/rf_cluster.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=rf_cluster, holdout=clustered$test, "rf_cluster"))
-
-model_results
-```
-
-
-
-
-## Hyperparameter Tuning
-
-### Random Forest
-
-```{r}
-
-if(file.exists("./saved_models/rf_tuned.rds")) {
-  print("Model already trained, reading from file...")
-  rf_tuned <- readRDS("./saved_models/rf_tuned.rds")
-} else {
-  print("Saved model not found, starting training process...")
-  tg_RF <- data.table(expand.grid(mtry = c(5, 10, 15),
-                                splitrule=c("gini", "extratrees"),
-                                min.node.size = c(1, 5, 10)))
-                    
-  rf_tuned <- pipeline_casero(smote_train_df, tunegrid=tg_RF)
-
-  saveRDS(rf_tuned, "./saved_models/rf_tuned.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=rf_tuned, holdout=holdout, "rf_tuned"))
-
-model_results
-```
-
-
-```{r}
-fwrite(model_results, "./Data/model_results.csv")
-fread("./Data/model_results.csv")
-```
-
-
-
-
-### XG Boost
-
-```{r}
-# # Tuning Round 1
-# if(file.exists("./saved_models/xg_tuned1.rds")) {
-#   print("Model already trained, reading from file...")
-#   xg_tuned1 <- readRDS("./saved_models/xg_tuned1.rds")
-# } else {
-#   nrounds <- 500
-#   tg_XG1 <- expand.grid(nrounds = seq(from = 200, to = nrounds, by = 50),
-#                                  eta = c(0.025, 0.05, 0.1, 0.3),
-#                                  max_depth = c(2, 3, 4, 5, 6),
-#                                  gamma = 0,
-#                                  colsample_bytree = 1,
-#                                  min_child_weight = 1,
-#                                  subsample = 1)
-#   
-#   xg_tuned1 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG1)
-# 
-# 
-#   saveRDS(xg_tuned1, "./saved_models/xg_tuned1.rds")
-# }
-# 
-# 
-# # Tuning Round 2
-# if(file.exists("./saved_models/xg_tuned2.rds")) {
-#   print("Model already trained, reading from file...")
-#   xg_tuned2 <- readRDS("./saved_models/xg_tuned2.rds")
-# } else {
-#   tg_XG2 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
-#                                eta = xg_tuned1$bestTune$eta,
-#                                max_depth = ifelse(xg_tuned1$bestTune$max_depth == 2,
-#                                                   c(xg_tuned1$bestTune$max_depth:4),
-#                                                   xg_tuned1$bestTune$max_depth - 1:xg_tuned1$bestTune$max_depth + 1),
-#                                gamma = 0,
-#                                colsample_bytree = 1,
-#                                min_child_weight = c(1, 2, 3),
-#                                subsample = 1)
-# 
-#   xg_tuned2 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG2)
-# 
-#   saveRDS(xg_tuned2, "./saved_models/xg_tuned2.rds")
-# }
-# 
-# 
-# # Tuning Round 3
-# if(file.exists("./saved_models/xg_tuned3.rds")) {
-#   print("Model already trained, reading from file...")
-#   xg_tuned3 <- readRDS("./saved_models/xg_tuned3.rds")
-# } else {
-#   tg_XG3 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
-#                                eta = xg_tuned1$bestTune$eta,
-#                                max_depth = xg_tuned2$bestTune$max_depth,
-#                                gamma = 0,
-#                                colsample_bytree = c(0.4, 0.6, 0.8, 1.0),
-#                                min_child_weight = xg_tuned2$bestTune$min_child_weight,
-#                                subsample = c(0.5, 0.75, 1.0))
-#                    
-#   xg_tuned3 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG3)
-#   
-#   saveRDS(xg_tuned3, "./saved_models/xg_tuned3.rds")
-# 
-# }
-# 
-# # Tuning Round 4
-# 
-# if(file.exists("./saved_models/xg_tuned4.rds")) {
-#   print("Model already trained, reading from file...")
-#   xg_tuned4 <- readRDS("./saved_models/xg_tuned4.rds")
-# } else {
-#   tg_XG4 <- expand.grid(nrounds = seq(from = 50, to = nrounds, by = 50),
-#                                 eta = xg_tuned1$bestTune$eta,
-#                                 max_depth = xg_tuned2$bestTune$max_depth,
-#                                 gamma = c(0, 0.05, 0.1, 0.5, 0.7, 0.9, 1.0),
-#                                 colsample_bytree = xg_tuned3$bestTune$colsample_bytree,
-#                                 min_child_weight = xg_tuned2$bestTune$min_child_weight,
-#                                 subsample = xg_tuned3$bestTune$subsample)
-# 
-#   xg_tuned4 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG4)
-#   
-#   saveRDS(xg_tuned4, "./saved_models/xg_tuned4.rds")
-# }
-# 
-# # Tuning Round 5
-# 
-# if(file.exists("./saved_models/xg_tuned5.rds")) {
-#   print("Model already trained, reading from file...")
-#   xg_tuned5 <- readRDS("./saved_models/xg_tuned5.rds")
-# } else {
-#   tg_XG5 <- expand.grid(nrounds = seq(from = 100, to = 10000, by = 100),
-#                                 eta = c(0.01, 0.015, 0.025, 0.05, 0.1),
-#                                 max_depth = xg_tuned2$bestTune$max_depth,
-#                                 gamma = xg_tuned4$bestTune$gamma,
-#                                 colsample_bytree = xg_tuned3$bestTune$colsample_bytree,
-#                                 min_child_weight = xg_tuned2$bestTune$min_child_weight,
-#                                 subsample = xg_tuned3$bestTune$subsample)
-# 
-#   xg_tuned5 <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg_XG5)
-# 
-#   
-#   saveRDS(xg_tuned5, "./saved_models/xg_tuned5.rds")
-# }
-# 
-# 
-# # Final Tuning Round
-# final_grid <- expand.grid(nrounds = xg_tuned5$bestTune$nrounds,
-#                                     eta = xg_tuned5$bestTune$eta,
-#                                     max_depth = xg_tuned5$bestTune$max_depth,
-#                                     gamma = xg_tuned5$bestTune$gamma,
-#                                     colsample_bytree = xg_tuned5$bestTune$colsample_bytree,
-#                                     min_child_weight = xg_tuned5$bestTune$min_child_weight,
-#                                     subsample = xg_tuned5$bestTune$subsample)
-# 
-# xg_final <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=final_grid)
-# 
-# saveRDS(xg_final, "xg_final.rds")
-                                  
-```
-
-
 # Remove Duration
 
 Duration is not something we would have at time of prediction, so using it is cheating. This repeats the process above but on SMOTE-d data that excludes the duration feature.
@@ -519,7 +127,7 @@ fwrite(smote_train_df, file = "Data/smote_train_no_duration.csv")
 
 if(file.exists("./saved_models/no_duration/no_duration/logit_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
-  logit_baseline_smote <- readRDS("./saved_models/no_duration/no_duration/logit_baseline_smote.rds")
+  logit_baseline_smote <- readRDS("./saved_models/no_duration/logit_baseline_smote.rds")
 } else {
   print("Saved model not found, starting training process...")
   pp <- c(scale_df)
@@ -536,7 +144,6 @@ model_results <- rbind(model_results, logit_results)
 model_results
 
 ```
-
 
 ### Random Forest
 ```{r}
@@ -587,7 +194,7 @@ model_results
 
 
 ### Scaling for Tree-Based Models
-
+#### Random Forest
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_scaled.rds")) {
   print("Model already trained, reading from file...")
@@ -611,6 +218,8 @@ model_results
 
 ```
 
+
+#### XG Boost
 ```{r}
 if(file.exists("./saved_models/no_duration/xgb_scaled.rds")) {
   print("Model already trained, reading from file...")
@@ -639,6 +248,12 @@ model_results
 ```
 
 
+## Feature Engineering
+######################################################## Logit Model ######################################################
+###########################################################################################################################
+###########################################################################################################################
+
+### FE1: Drop Day
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -657,6 +272,8 @@ model_results
 
 ```
 
+
+### FE2: Drop Pdays
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -678,6 +295,7 @@ model_results
 ```
 
 
+### FE3: Combined
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_day_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -700,6 +318,11 @@ model_results
 ```
 
 
+###################################################### Random Forest ######################################################
+###########################################################################################################################
+###########################################################################################################################
+
+### FE1: Drop Day
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -722,7 +345,30 @@ model_results
 ```
 
 
+### FE2: Drop Pdays
+```{r}
+if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
+  print("Model already trained, reading from file...")
+  rf_drop_day_pdays <- readRDS("./saved_models/no_duration/rf_drop_pdays.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+  
+  fs <- c(drop_pdays)
 
+  rf_drop_pdays <- pipeline_casero(smote_train_df, tunegrid=tg, selection=fs)
+  saveRDS(rf_drop_pdays, "./saved_models/no_duration/rf_drop_pdays.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_drop_pdays, holdout=holdout, "rf_drop_pdays"))
+
+model_results
+```
+
+
+### FE3: Combined
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -745,7 +391,7 @@ model_results
 ```
 
 
-
+### FE3: Drop Day
 ```{r}
 if(file.exists("./saved_models/no_duration/xgb_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -771,10 +417,37 @@ model_results
 ```
 
 
-```{r}
+######################################################## Logit Model ######################################################
+###########################################################################################################################
+###########################################################################################################################
 
+### FE4: Cluster
+```{r}
 clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
 
+if(file.exists("./saved_models/no_duration/logit_cluster.rds")) {
+  print("Model already trained, reading from file...")
+  logit_cluster_drop_day <- readRDS("./saved_models/no_duration/logit_cluster.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  
+  fs <- c(drop_day)
+  
+  logit_cluster <- pipeline_casero(clustered$train, preprocessing=pp, selection=fs, model="glm")
+  saveRDS(logit_cluster, "./saved_models/no_duration/logit_cluster.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_cluster,
+                                                     holdout=scale_df(clustered$test),
+                                                     "logit_cluster"))
+
+model_results
+```
+
+
+### FE5: Cluster and Drop Day
+```{r}
 if(file.exists("./saved_models/no_duration/logit_cluster_drop_day.rds")) {
   print("Model already trained, reading from file...")
   logit_cluster_drop_day <- readRDS("./saved_models/no_duration/logit_cluster_drop_day.rds")
@@ -795,10 +468,12 @@ model_results <- rbind(model_results, evaluate_model(model=logit_cluster_drop_da
 model_results
 ```
 
+###################################################### Random Forest ######################################################
+###########################################################################################################################
+###########################################################################################################################
+
+### FE4: Cluster
 ```{r}
-
-clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
-
 if(file.exists("./saved_models/no_duration/rf_cluster.rds")) {
   print("Model already trained, reading from file...")
   rf_cluster <- readRDS("./saved_models/no_duration/rf_cluster.rds")
@@ -820,9 +495,9 @@ model_results <- rbind(model_results, evaluate_model(model=rf_cluster, holdout=c
 model_results
 ```
 
-```{r}
-clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
 
+### FE5: Cluster and Drop Day
+```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day_cluster.rds")) {
   print("Model already trained, reading from file...")
   rf_drop_day_cluster <- readRDS("./saved_models/no_duration/rf_drop_day_cluster.rds")
@@ -845,11 +520,8 @@ model_results
 ```
 
 
-
 ## Hyperparameter Tuning
-
 ### Random Forest
-
 ```{r}
 
 if(file.exists("./saved_models/no_duration/rf_tuned.rds")) {
@@ -871,15 +543,8 @@ model_results <- rbind(model_results, evaluate_model(model=rf_tuned, holdout=hol
 model_results
 ```
 
-
+# Write results to a CSV
 ```{r}
 fwrite(model_results, "./Data/model_results_no_duration.csv")
 fread("./Data/model_results_no_duration.csv")
-
-
-
-
-
-
-
-
+```
