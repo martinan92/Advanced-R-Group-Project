@@ -52,6 +52,10 @@ clustering <- function(df_train, df_test, n_clusters){
   
   df1 <- rbind(df_train, df_test, fill = TRUE)
   
+  if(is.null(df1$total_contact)) {
+    df1 <- total_contacts(df1)
+  }
+  
   set.seed(1912)
   clusters <- kmeans(scale(df1[,c("age", 'balance', 'total_contact')]),n_clusters)
   
@@ -63,7 +67,6 @@ clustering <- function(df_train, df_test, n_clusters){
   return(list("train" = df_train, "test" = df_test))
   
 }
-
 
 IQR.outliers <- function(x,iqr = 1.5) {
   Q3<-quantile(x,0.75)

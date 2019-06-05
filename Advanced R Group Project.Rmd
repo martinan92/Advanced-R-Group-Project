@@ -136,7 +136,7 @@ Once again, baseline models are run though this time without the inclusion of th
 #### 3.2.1 Logit
 
 ```{r}
-if(file.exists("./saved_models/no_duration/no_duration/logit_baseline_smote.rds")) {
+if(file.exists("./saved_models/no_duration/logit_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
   logit_baseline_smote <- readRDS("./saved_models/no_duration/logit_baseline_smote.rds")
 } else {
@@ -312,7 +312,35 @@ model_results
 ```
 
 
-### FE3: Numerical Combinations
+### FE3: Clustering
+The third  engineered feature will cluster based on customer-related features
+```{r}
+
+clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+
+if(file.exists("./saved_models/no_duration/logit_cluster.rds")) {
+  print("Model already trained, reading from file...")
+  logit_cluster <- readRDS("./saved_models/no_duration/logit_cluster.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  
+  logit_cluster <- pipeline_casero(clustered$train, preprocessing=pp, model="glm")
+  
+  saveRDS(logit_cluster, "./saved_models/no_duration/logit_cluster.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_cluster,
+                                                     holdout=scale_df(clustered$test),
+                                                     "logit_cluster"))
+
+model_results
+```
+
+
+
+
+### FE4: Numerical Combinations
 The third engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
 
 Multiplication Based:
@@ -354,12 +382,53 @@ model_results <- rbind(model_results,
 model_results
 ```
 
-### FE4: Combined
+### FE5: Clustering and Numerical Combs 
+
+```{r}
+# All this is necessary since the function that creates the 
+campaign_train <- smote_train_df$campaign
+previous_train <- smote_train_df$previous
+
+campaign_holdout <- holdout$campaign
+previous_holdout <- holdout$previous
+
+clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+clustered$train$campaign <- campaign_train
+clustered$train$previous <- previous_train
+clustered$test$campaign <- campaign_holdout
+clustered$test$previous <- previous_holdout
+
+if(file.exists("./saved_models/no_duration/logit_cluster_num_comb.rds")) {
+  print("Model already trained, reading from file...")
+  logit_cluster_num_comb <- readRDS("./saved_models/no_duration/logit_cluster_num_comb.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fc <- c(num_combinations)
+  
+  logit_cluster_num_comb <- pipeline_casero(clustered$train, preprocessing=pp, creation=fc, model="glm")
+  
+  saveRDS(logit_cluster_num_comb, "./saved_models/no_duration/logit_cluster_num_comb.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_cluster_num_comb,
+                                                     holdout=scale_df(num_combinations(clustered$test)),
+                                                     "logit_cluster_num_comb"))
+
+model_results
+```
+
+
+
+### FE6: Combined
+
+# Note: Dropping the day column does not appear beneficial...
+
 As dropping the day column and creating numerical combinations proved to be indenpendently beneficial, they will be combined in this iteration of the model.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_combined.rds")) {
   print("Model already trained, reading from file...")
-  logit_drop_day_pdays <- readRDS("./saved_models/no_duration/logit_combined.rds")
+  logit_combination <- readRDS("./saved_models/no_duration/logit_combined.rds")
 } else { 
   print("Saved model not found, starting training process...")
   pp <- c(scale_df)
@@ -379,9 +448,7 @@ model_results
 ```
 
 
-###################################################### Random Forest ######################################################
-###########################################################################################################################
-###########################################################################################################################
+### Random Forest 
 
 ### FE1: Drop Day
 The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration.
@@ -430,6 +497,7 @@ model_results <- rbind(model_results, evaluate_model(model=rf_drop_pdays, holdou
 model_results
 ```
 
+
 ### FE3: Numerical Combinations
 The third engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
 
@@ -454,7 +522,7 @@ previous_sq = previous * previous
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_numerical_comb.rds")) {
   print("Model already trained, reading from file...")
-  rf_drop_day_pdays <- readRDS("./saved_models/no_duration/rf_numerical_comb.rds")
+  rf_numerical_comb <- readRDS("./saved_models/no_duration/rf_numerical_comb.rds")
 } else {
   print("Saved model not found, starting training process...")
   tg <- data.table(expand.grid(mtry=15,
@@ -502,29 +570,6 @@ model_results
 ###########################################################################################################################
 ###########################################################################################################################
 
-### FE5: Clustering
-The fifth engineered feature combines the previous clustering feature and dropping the day column.
-```{r}
-if(file.exists("./saved_models/no_duration/logit_cluster.rds")) {
-  print("Model already trained, reading from file...")
-  logit_cluster_drop_day <- readRDS("./saved_models/no_duration/logit_cluster.rds")
-} else { 
-  print("Saved model not found, starting training process...")
-  pp <- c(scale_df)
-  
-  fs <- c(drop_day)
-  fc <- c(num_combinations)
-  
-  logit_cluster_drop_day <- pipeline_casero(clustered$train, preprocessing=pp, selection=fs, creation=fc, model="glm")
-  saveRDS(logit_cluster, "./saved_models/no_duration/logit_cluster.rds")
-}
-
-model_results <- rbind(model_results, evaluate_model(model=logit_cluster,
-                                                     holdout=scale_df(clustered$test),
-                                                     "logit_cluster"))
-
-model_results
-```
 
 
 ###################################################### Random Forest ######################################################
