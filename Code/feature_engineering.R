@@ -108,12 +108,12 @@ num_combinations <- function(df){
   
   #non-linear
   df1$balance_sq <- df1$balance * df1$balance
-  df1$balance_log <- log(df1$balance)
-  df1$balance_sqrt <- sqrt(df1$balance)
+  # df1$balance_log <- log(df1$balance)
+  # df1$balance_sqrt <- sqrt(df1$balance)
   df1$age_sq <- df1$age * df1$age
   df1$age_log <- log(df1$age)
   df1$age_sqrt <- sqrt(df1$age)
   df1$previous_sq <- df1$previous * df1$previous
-    
-    
+  
+  return(df1)
 }
