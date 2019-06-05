@@ -98,11 +98,13 @@ num_combinations <- function(df){
   df1$p_campaign_age <- df1$campaign * df1$age
   df1$p_balance_previous <- df1$balance * df1$previous
   df1$p_balance_age <- df1$balance * df1$age
-  df1$age_previous <- df1$age * df1$previous
+  df1$p_age_previous <- df1$age * df1$previous
+  df1$p_campaign_pdays <- df1$campaign * df1$pdays
   
   #sums
   df1$s_campaign_age <- df1$campaign + df1$age
   df1$s_campaing_previous <- df1$campaign + df1$previous
+  df1$s_campaign_pdays <- df1$campaign - df1$pdays
   
   #non-linear
   df1$balance_sq <- df1$balance * df1$balance
