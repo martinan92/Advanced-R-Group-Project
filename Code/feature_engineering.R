@@ -52,6 +52,10 @@ clustering <- function(df_train, df_test, n_clusters){
   
   df1 <- rbind(df_train, df_test, fill = TRUE)
   
+  if(is.null(df1$total_contact)) {
+    df1 <- total_contacts(df1)
+  }
+  
   set.seed(1912)
   clusters <- kmeans(scale(df1[,c("age", 'balance', 'total_contact')]),n_clusters)
   
@@ -63,7 +67,6 @@ clustering <- function(df_train, df_test, n_clusters){
   return(list("train" = df_train, "test" = df_test))
   
 }
-
 
 IQR.outliers <- function(x,iqr = 1.5) {
   Q3<-quantile(x,0.75)
@@ -89,3 +92,31 @@ remove_outliers <- function(df, n = 1.5){
 }
 
 
+num_combinations <- function(df){
+  df1 <- data.table(df)
+  
+  #products
+  df1$p_campaign_previous <- df1$campaign * df1$previous
+  df1$p_balance_campaign <- df1$balance * df1$campaign
+  df1$p_campaign_age <- df1$campaign * df1$age
+  df1$p_balance_previous <- df1$balance * df1$previous
+  df1$p_balance_age <- df1$balance * df1$age
+  df1$p_age_previous <- df1$age * df1$previous
+  df1$p_campaign_pdays <- df1$campaign * df1$pdays
+  
+  #sums
+  df1$s_campaign_age <- df1$campaign + df1$age
+  df1$s_campaing_previous <- df1$campaign + df1$previous
+  df1$s_campaign_pdays <- df1$campaign - df1$pdays
+  
+  #non-linear
+  df1$balance_sq <- df1$balance * df1$balance
+  # df1$balance_log <- log(df1$balance)
+  # df1$balance_sqrt <- sqrt(df1$balance)
+  df1$age_sq <- df1$age * df1$age
+  df1$age_log <- log(df1$age)
+  df1$age_sqrt <- sqrt(df1$age)
+  df1$previous_sq <- df1$previous * df1$previous
+  
+  return(df1)
+}

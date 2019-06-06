@@ -10,4 +10,4 @@ make_predictions <- function(df, preprocessing=c(), feature_creation=c(), train_
   return(predict(train_obj, df))
 }
 
-preds <- make_predictions(bank_test, train_obj=rf_baseline)
+#preds <- make_predictions(bank_test, train_obj=rf_baseline)
