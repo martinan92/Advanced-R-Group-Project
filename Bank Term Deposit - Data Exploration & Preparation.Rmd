@@ -766,3 +766,10 @@ ggplot(raw_train_data,mapping = aes(poutcome,fill=y))+
   theme_classic() +
   scale_fill_manual("Offer Accepted", values = c("no" = "#995052", "yes" = "#529950"))
 ```
+
+
+## 8. Data exploration results
+
+First of all we saw that there are no missing values within our data set, which is important in regards of data cleaning. Furthermore our blind test data seems to be a random sample from the complete data set since the feature distributions for train and test data seem to be similar. For our later models we will test to scale some variables due to the high skewness and also create features based on numeric combinations since we saw that some of these variables are not only correlated but also from a business perspective seem to be related. When looking at the target distribution across variables we saw that duration of the phone seems to differ with regard of a successful and an unsuccessful offer, which hints that this would be an important feature for the models. However, since this cannot be observed BEFORE a call is actually made, this variable cannot be included within the model. Nevertheless the target distributions showed more insights such as a very high rejection rate during May for example. 
+
+After we are now done with data exploration and no data cleaning has to be performed at this stage we can move on to our predictive model, which can be found in the other markdown.
