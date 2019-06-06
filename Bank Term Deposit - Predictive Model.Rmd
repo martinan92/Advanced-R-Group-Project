@@ -1,0 +1,589 @@
+---
+title: "Bank Term Deposit - Predictive Model"
+author: "O-1 R Masters"
+date: "6/3/2019"
+output: html_document
+---
+
+```{r setup}
+source('./load_libraries.R')
+
+raw_bank_train <- fread("Data/BankCamp_train.csv")
+raw_bank_test <- fread("Data/BankCamp_test.csv")
+
+```
+
+
+## 1. SMOTE
+
+As seen during the data exploration stage, the train data set has a relative imbalance with regards to the target variable (with the positive classification being the minority). If models were trained on this data as-is, there would be a greater bias towards the majority class leading to improper predictions (particularly a higher proportion of false negatives). To deal with this, the Synthetic Minority Oversampling Technique ("SMOTE") will be utilized. With the given parameters, 5 examples will be created of each original minority class. 
+
+```{r}
+fixed_train_df <- fix_types(create_weekday(raw_bank_train))
+train_test <- f_partition(fixed_train_df, test_proportion=0.1, seed=20190603)
+
+train_to_smote <- train_test$train
+holdout <- train_test$test
+
+if(file.exists("./Data/smote_train.csv")) {
+  print("SMOTE already created, reading from file...")
+  smote_train_df <- fix_types(fread("./Data/smote_train.csv"))
+} else {
+  smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
+  fwrite(smote_train_df, file = "Data/smote_train.csv")
+}
+print(summary(smote_train_df))
+
+```
+
+
+## 2.  Baselines
+
+For this classification task, logistic regression, the ranger implementation of Random Forest, and XG Boost were attempted. As can be seen, as-is the inclusion of a duration yields good results metrics (particularly sensitivity) at this early stage. However, as this would not realistically be available in production, it will be excluded from the model.
+
+
+### 2.1 Logit
+```{r}
+
+if(file.exists("./saved_models/logit_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  logit_baseline_smote <- readRDS("./saved_models/logit_baseline_smote.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  logit_baseline_smote <- pipeline_casero(smote_train_df, preprocessing=pp, model="glm")
+  saveRDS(logit_baseline_smote, "./saved_models/logit_baseline_smote.rds")
+}
+
+
+logit_results <- evaluate_model(model=logit_baseline_smote, holdout=scale_df(holdout), "logit_baseline_smote")
+
+model_results <- setNames(data.table(matrix(nrow = 0, ncol = 15)), names(logit_results))
+model_results <- rbind(model_results, logit_results)
+
+model_results
+
+```
+
+
+### 2.2 Random Forest
+```{r}
+if(file.exists("./saved_models/rf_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  rf_baseline_smote <- readRDS("./saved_models/rf_baseline_smote.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+
+  rf_baseline_smote <- pipeline_casero(smote_train_df, tunegrid=tg)
+  saveRDS(rf_baseline_smote, "./saved_models/rf_baseline_smote.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_baseline_smote, holdout=holdout, "rf_baseline_smote"))
+
+model_results
+
+```
+
+
+### 2.3 XG Boost
+```{r}
+if(file.exists("./saved_models/xgb_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  xgb_baseline_smote <- readRDS("./saved_models/xgb_baseline_smote.rds")
+} else {
+  # So many tuning parameters wow
+  tg <- data.table(expand.grid(eta=0.4,
+                             max_depth='2',
+                             nrounds=500,
+                             gamma=10,
+                             colsample_bytree=0.5,
+                             min_child_weight=5,
+                             subsample=0.9))
+
+  xgb_baseline_smote <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg)
+  saveRDS(xgb_baseline_smote, "./saved_models/xgb_baseline_smote.rds")
+
+}
+
+model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, holdout=holdout, "xgb_baseline_smote"))
+
+model_results
+```
+
+
+## 3. Remove Duration
+
+As previously stated, duration is not something we would have at time of prediction, so using it would be considered cheating. These next steps repeat the above processes but on data generated via SMOTE that excludes the duration feature.
+
+### 3.1 SMOTE
+```{r}
+fixed_train_df <- fix_types(create_weekday(drop_duration(raw_bank_train)))
+train_test <- f_partition(fixed_train_df, test_proportion=0.1, seed=20190603)
+
+train_to_smote <- train_test$train
+holdout <- train_test$test
+  
+if(file.exists("./Data/smote_train_no_duration.csv")) {
+  print("SMOTE already created, reading from file...")
+  smote_train_df <- fix_types(fread("./Data/smote_train_no_duration.csv"))
+} else {
+  smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
+  fwrite(smote_train_df, file = "Data/smote_train_no_duration.csv")
+}
+print(summary(smote_train_df))
+```
+
+
+### 3.2 Baselines
+
+Once again, baseline models are run though this time without the inclusion of the “duration” variable. As can be seen below, the sensitivity metric drops quite drastically with logistic regression having the highest value at this stage. Due to poor performance, the XG Boost will be excluded.
+
+#### 3.2.1 Logit
+```{r}
+if(file.exists("./saved_models/no_duration/logit_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  logit_baseline_smote <- readRDS("./saved_models/no_duration/logit_baseline_smote.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  logit_baseline_smote <- pipeline_casero(smote_train_df, preprocessing=pp, model="glm")
+  saveRDS(logit_baseline_smote, "./saved_models/no_duration/logit_baseline_smote.rds")
+}
+
+
+logit_results <- evaluate_model(model=logit_baseline_smote, holdout=scale_df(holdout), "logit_baseline_smote")
+
+model_results <- setNames(data.table(matrix(nrow = 0, ncol = 15)), names(logit_results))
+model_results <- rbind(model_results, logit_results)
+
+model_results
+
+```
+
+
+#### 3.2.2 Random Forest
+```{r}
+if(file.exists("./saved_models/no_duration/rf_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  rf_baseline_smote <- readRDS("./saved_models/no_duration/rf_baseline_smote.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+
+  rf_baseline_smote <- pipeline_casero(smote_train_df, tunegrid=tg)
+  saveRDS(rf_baseline_smote, "./saved_models/no_duration/rf_baseline_smote.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_baseline_smote, holdout=holdout, "rf_baseline_smote"))
+
+model_results
+
+```
+
+
+#### 3.2.3 XG Boost
+```{r}
+if(file.exists("./saved_models/no_duration/xgb_baseline_smote.rds")) {
+  print("Model already trained, reading from file...")
+  xgb_baseline_smote <- readRDS("./saved_models/no_duration/xgb_baseline_smote.rds")
+} else {
+  # So many tuning parameters wow
+  tg <- data.table(expand.grid(eta=0.4,
+                             max_depth='2',
+                             nrounds=500,
+                             gamma=10,
+                             colsample_bytree=0.5,
+                             min_child_weight=5,
+                             subsample=0.9))
+
+  xgb_baseline_smote <- pipeline_casero(smote_train_df, model="xgbTree", tunegrid=tg)
+  saveRDS(xgb_baseline_smote, "./saved_models/no_duration/xgb_baseline_smote.rds")
+
+}
+
+model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, holdout=holdout, "xgb_baseline_smote"))
+
+model_results
+```
+
+
+### 3.3 Scaling for Tree-Based Models
+In this stage, scaling is applied to the data and run using the tree-based models. Although this results in very high sensitivity, this is at the expense of the other metrics which fall drastically. This outcome is due to the models predicting essentially all observations in the positive class (meaning that nearly all positives are correctly identified with nearly all negatives incorrectly identified)
+
+
+#### 3.3.1 Random Forest
+```{r}
+if(file.exists("./saved_models/no_duration/rf_scaled.rds")) {
+  print("Model already trained, reading from file...")
+  rf_scaled <- readRDS("./saved_models/no_duration/rf_scaled.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  
+  pp <- c(scale_df)
+  
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+
+  rf_scaled <- pipeline_casero(smote_train_df, preprocessing=pp, tunegrid=tg)
+  saveRDS(rf_scaled, "./saved_models/no_duration/rf_scaled.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_scaled, holdout=scale_df(holdout), "rf_scaled"))
+
+model_results
+
+```
+
+
+#### 3.3.2 XG Boost
+```{r}
+if(file.exists("./saved_models/no_duration/xgb_scaled.rds")) {
+  print("Model already trained, reading from file...")
+  xgb_scaled <- readRDS("./saved_models/no_duration/xgb_scaled.rds")
+} else {
+  
+  pp <- c(scale_df)
+  
+  # So many tuning parameters wow
+  tg <- data.table(expand.grid(eta=0.4,
+                             max_depth='2',
+                             nrounds=500,
+                             gamma=10,
+                             colsample_bytree=0.5,
+                             min_child_weight=5,
+                             subsample=0.9))
+
+  xgb_scaled <- pipeline_casero(smote_train_df, model="xgbTree", preprocessing=pp, tunegrid=tg)
+  saveRDS(xgb_scaled, "./saved_models/no_duration/xgb_scaled.rds")
+
+}
+
+model_results <- rbind(model_results, evaluate_model(model=xgb_scaled, holdout=scale_df(holdout), "xgb_scaled"))
+
+model_results
+```
+
+
+## Feature Engineering
+######################################################## Logit Model ######################################################
+###########################################################################################################################
+###########################################################################################################################
+
+### FE1: Drop Day
+The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
+```{r}
+if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
+  print("Model already trained, reading from file...")
+  logit_drop_day <- readRDS("./saved_models/no_duration/logit_drop_day.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fs <- c(drop_day)
+  logit_drop_day <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
+  saveRDS(logit_drop_day, "./saved_models/no_duration/logit_drop_day.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_drop_day, holdout=scale_df(holdout), "logit_drop_day"))
+
+model_results
+
+```
+
+
+### FE2: Drop Pdays
+The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.
+```{r}
+if(file.exists("./saved_models/no_duration/logit_drop_pdays.rds")) {
+  print("Model already trained, reading from file...")
+  logit_drop_pdays <- readRDS("./saved_models/no_duration/logit_drop_pdays.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fs <- c(drop_pdays)
+  logit_drop_pdays <- pipeline_casero(smote_train_df, preprocessing=pp, selection=fs, model="glm")
+  saveRDS(logit_drop_pdays, "./saved_models/no_duration/logit_drop_pdays.rds")
+}
+
+model_results <- rbind(model_results,
+                       evaluate_model(model=logit_drop_pdays,
+                                      holdout=scale_df(holdout),
+                                      "logit_drop_pdays"))
+
+model_results
+```
+
+
+### FE3: Clustering
+The third engineered feature will cluster based on customer-related features.
+```{r}
+
+clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+
+if(file.exists("./saved_models/no_duration/logit_cluster.rds")) {
+  print("Model already trained, reading from file...")
+  logit_cluster <- readRDS("./saved_models/no_duration/logit_cluster.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  
+  logit_cluster <- pipeline_casero(clustered$train, preprocessing=pp, model="glm")
+  
+  saveRDS(logit_cluster, "./saved_models/no_duration/logit_cluster.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_cluster,
+                                                     holdout=scale_df(clustered$test),
+                                                     "logit_cluster"))
+
+model_results
+```
+
+
+### FE4: Numerical Combinations
+The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
+
+Multiplication Based:
+p_campaign_previous = campaign * previous
+p_balance_campaign = balance * campaign
+p_campaign_age = campaign * age
+p_balance_previous = balance * previous
+p_balance_age = balance * age
+age_previous = age * previous
+
+Addition Based:
+s_campaign_age = campaign + age
+s_campaing_previous = campaign + previous
+
+Non-linear combinations:
+balance_sq = balance * balance
+age_sq = age * age
+age_log = log(age)
+age_sqrt = sqrt(age)
+previous_sq = previous * previous
+  
+```{r}
+if(file.exists("./saved_models/no_duration/logit_numerical_combination.rds")) {
+  print("Model already trained, reading from file...")
+  logit_numerical_combination <- readRDS("./saved_models/no_duration/logit_numerical_combination.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fc <- c(num_combinations)
+  logit_numerical_combination <- pipeline_casero(smote_train_df, preprocessing=pp, creation=fc, model="glm")
+  saveRDS(logit_numerical_combination, "./saved_models/no_duration/logit_numerical_combination.rds")
+}
+
+model_results <- rbind(model_results,
+                       evaluate_model(model=logit_numerical_combination,
+                                      holdout=scale_df(num_combinations(holdout)),
+                                      "logit_numerical_combination"))
+
+model_results
+```
+
+
+### FE5: Clustering and Numerical Combs 
+```{r}
+# All this is necessary since the function that creates the 
+campaign_train <- smote_train_df$campaign
+previous_train <- smote_train_df$previous
+
+campaign_holdout <- holdout$campaign
+previous_holdout <- holdout$previous
+
+clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+clustered$train$campaign <- campaign_train
+clustered$train$previous <- previous_train
+clustered$test$campaign <- campaign_holdout
+clustered$test$previous <- previous_holdout
+
+if(file.exists("./saved_models/no_duration/logit_cluster_num_comb.rds")) {
+  print("Model already trained, reading from file...")
+  logit_cluster_num_comb <- readRDS("./saved_models/no_duration/logit_cluster_num_comb.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  pp <- c(scale_df)
+  fc <- c(num_combinations)
+  
+  logit_cluster_num_comb <- pipeline_casero(clustered$train, preprocessing=pp, creation=fc, model="glm")
+  
+  saveRDS(logit_cluster_num_comb, "./saved_models/no_duration/logit_cluster_num_comb.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=logit_cluster_num_comb,
+                                                     holdout=scale_df(num_combinations(clustered$test)),
+                                                     "logit_cluster_num_comb"))
+
+model_results
+```
+
+
+###################################################### Random Forest ######################################################
+###########################################################################################################################
+########################################################################################################################### 
+
+### FE1: Drop Day
+The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
+```{r}
+if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
+  print("Model already trained, reading from file...")
+  rf_drop_day <- readRDS("./saved_models/no_duration/rf_drop_day.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+  
+  fs <- c(drop_day)
+
+  rf_drop_day <- pipeline_casero(smote_train_df, tunegrid=tg, selection=fs)
+  saveRDS(rf_drop_day, "./saved_models/no_duration/rf_drop_day.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_drop_day, holdout=holdout, "rf_drop_day"))
+
+model_results
+```
+
+
+### FE2: Drop Pdays
+The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.
+```{r}
+if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
+  print("Model already trained, reading from file...")
+  rf_drop_pdays <- readRDS("./saved_models/no_duration/rf_drop_pdays.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+  
+  fs <- c(drop_pdays)
+
+  rf_drop_pdays <- pipeline_casero(smote_train_df, tunegrid=tg, selection=fs)
+  saveRDS(rf_drop_pdays, "./saved_models/no_duration/rf_drop_pdays.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_drop_pdays, holdout=holdout, "rf_drop_pdays"))
+
+model_results
+```
+
+### FE3: Clustering
+The third engineered feature will cluster based on customer-related features.
+```{r}
+
+clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
+
+if(file.exists("./saved_models/no_duration/rf_cluster.rds")) {
+  print("Model already trained, reading from file...")
+  rf_cluster <- readRDS("./saved_models/no_duration/rf_cluster.rds")
+} else { 
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+  
+  
+  rf_cluster <- pipeline_casero(clustered$train, tunegrid=tg)
+  
+  saveRDS(rf_cluster, "./saved_models/no_duration/rf_cluster.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_cluster,
+                                                     holdout=scale_df(clustered$test),
+                                                     "rf_cluster"))
+
+model_results
+```
+
+### FE4: Numerical Combinations
+The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
+
+Multiplication Based:
+p_campaign_previous = campaign * previous
+p_balance_campaign = balance * campaign
+p_campaign_age = campaign * age
+p_balance_previous = balance * previous
+p_balance_age = balance * age
+age_previous = age * previous
+
+Addition Based:
+s_campaign_age = campaign + age
+s_campaing_previous = campaign + previous
+
+Non-linear combinations:
+balance_sq = balance * balance
+age_sq = age * age
+age_log = log(age)
+age_sqrt = sqrt(age)
+previous_sq = previous * previous
+```{r}
+if(file.exists("./saved_models/no_duration/rf_numerical_comb.rds")) {
+  print("Model already trained, reading from file...")
+  rf_numerical_comb <- readRDS("./saved_models/no_duration/rf_numerical_comb.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg <- data.table(expand.grid(mtry=15,
+                             splitrule='gini',
+                             min.node.size=5))
+
+  fc <- c(num_combinations)
+
+  rf_numerical_comb <- pipeline_casero(smote_train_df, tunegrid=tg, creation=fc)
+  saveRDS(rf_numerical_comb, "./saved_models/no_duration/rf_numerical_comb.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_numerical_comb, holdout=num_combinations(holdout), "rf_numerical_comb"))
+
+model_results
+```
+
+
+## Hyperparameter Tuning
+### Random Forest
+The hyperparameters to be tuned for the Ranger implementation will be mtry (the number of variables that can split a node), splitrule (using gini [information gain] or extratrees [randomly chosen cut points]), and the minimum node size. As the all of the engineered features individually worsened model performance (and therefore were not attempted in combination), the model well be tuned with the original variables.
+```{r}
+
+if(file.exists("./saved_models/no_duration/rf_tuned.rds")) {
+  print("Model already trained, reading from file...")
+  rf_tuned <- readRDS("./saved_models/no_duration/rf_tuned.rds")
+} else {
+  print("Saved model not found, starting training process...")
+  tg_RF <- data.table(expand.grid(mtry = c(5, 10, 15),
+                                splitrule=c("gini", "extratrees"),
+                                min.node.size = c(1, 5, 10)))
+
+                    
+  rf_tuned <- pipeline_casero(smote_train_df, tunegrid=tg_RF)
+
+  saveRDS(rf_tuned, "./saved_models/no_duration/rf_tuned.rds")
+}
+
+model_results <- rbind(model_results, evaluate_model(model=rf_tuned, holdout=holdout, "rf_tuned"))
+
+model_results
+```
+
+
+# Write results to a CSV
+```{r}
+fwrite(model_results, "./Data/model_results_no_duration.csv")
+fread("./Data/model_results_no_duration.csv")
+```
+
+
+# Predict on Test Set
+```{r}
+scaled_validation<-scale_df(raw_bank_test)
+clustered_validation <- clustering(df_train=smote_train_df, df_test=scaled_validation, n_clusters=4)
+
+prediction<-predict(logit_cluster, data = clustered_validation, type='raw')
+write.csv(prediction, file = "Data/output.csv")
+```
