@@ -10,20 +10,12 @@ output: html_document
 Once we have understood our dataset through EDA, which can be found in the previous R markdown (Bank Term Deposit - Data Exploration), we proceed to create our predictive model using the following approach:
 
 *Data Preparation - Fixing variable types, balancing the dataset and doing the train/test split
-
 *Baseline model - Evaluating metrics on three different models: Logistic Regression, Random Forest and XGBoost.
-
 *Feature Engineering - Attempting to create new variables to better predict the classes of our target variable.
-
 *Model Selection - Compare the performance on the holdout on all models with the best generated features
-
 *Model Tuning - Perform a grid search to get the best parameters on our selected best model
-
 Now we will explain in detail all the previously mentioned steps.
 
-
-
-##### Loading data and libraries
 ```{r setup}
 source('./load_libraries.R')
 
@@ -61,6 +53,7 @@ print(summary(smote_train_df))
 
 For this classification task, logistic regression, the ranger implementation of Random Forest, and XG Boost were attempted. As can be seen, as-is the inclusion of a duration yields good results metrics (particularly sensitivity) at this early stage. However, as this would not realistically be available in production, it will be excluded from the model.
 
+NOTE: Scaling is always applied to the logit regression model (due to the preprocessing requirements of the model) and not to the tree based models as this is not considered necessary.
 
 ### 3.1 Logit
 ```{r, warning=FALSE, message=FALSE}
@@ -81,7 +74,11 @@ logit_results <- evaluate_model(model=logit_baseline_smote, holdout=scale_df(hol
 model_results <- setNames(data.table(matrix(nrow = 0, ncol = 15)), names(logit_results))
 model_results <- rbind(model_results, logit_results)
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 
 ```
 
@@ -103,7 +100,11 @@ if(file.exists("./saved_models/rf_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_baseline_smote, holdout=holdout, "rf_baseline_smote"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 
 ```
 
@@ -130,7 +131,11 @@ if(file.exists("./saved_models/xgb_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, holdout=holdout, "xgb_baseline_smote"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
@@ -180,7 +185,11 @@ logit_results <- evaluate_model(model=logit_baseline_smote, holdout=scale_df(hol
 model_results <- setNames(data.table(matrix(nrow = 0, ncol = 15)), names(logit_results))
 model_results <- rbind(model_results, logit_results)
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 
 ```
 
@@ -202,7 +211,11 @@ if(file.exists("./saved_models/no_duration/rf_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_baseline_smote, holdout=holdout, "rf_baseline_smote"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 
 ```
 
@@ -229,7 +242,11 @@ if(file.exists("./saved_models/no_duration/xgb_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, holdout=holdout, "xgb_baseline_smote"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
@@ -257,7 +274,11 @@ if(file.exists("./saved_models/no_duration/rf_scaled.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_scaled, holdout=scale_df(holdout), "rf_scaled"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 
 ```
 
@@ -287,18 +308,19 @@ if(file.exists("./saved_models/no_duration/xgb_scaled.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=xgb_scaled, holdout=scale_df(holdout), "xgb_scaled"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
 ## 6. Feature Engineering
-
 ### 6.1 Logit Regression
-
 #### 6.1.1 Drop Day
 
 The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
-
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -313,7 +335,11 @@ if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=logit_drop_day, holdout=scale_df(holdout), "logit_drop_day"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 
 ```
 
@@ -337,14 +363,16 @@ model_results <- rbind(model_results,
                                       holdout=scale_df(holdout),
                                       "logit_drop_pdays"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
 #### 6.1.3 Clustering
-
 The third engineered feature will cluster based on customer-related features.
-
 ```{r}
 
 clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
@@ -365,16 +393,18 @@ model_results <- rbind(model_results, evaluate_model(model=logit_cluster,
                                                      holdout=scale_df(clustered$test),
                                                      "logit_cluster"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
 #### 6.1.4 Numerical Combinations
-
 The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
 
 Multiplication Based:
-
 *p_campaign_previous = campaign x previous
 *p_balance_campaign = balance x campaign
 *p_campaign_age = campaign x age
@@ -383,10 +413,8 @@ Multiplication Based:
 *age_previous = age x previous
 
 Addition Based:
-
 *s_campaign_age = campaign + age
 *s_campaing_previous = campaign + previous
-
 Non-linear combinations:
 
 *balance_sq = balance x balance
@@ -394,7 +422,6 @@ Non-linear combinations:
 *age_log = log(age)
 *age_sqrt = sqrt(age)
 *previous_sq = previous x previous
-  
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_numerical_combination.rds")) {
   print("Model already trained, reading from file...")
@@ -412,11 +439,15 @@ model_results <- rbind(model_results,
                                       holdout=scale_df(num_combinations(holdout)),
                                       "logit_numerical_combination"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
-#### 6.1.5 Clustering and Numerical Combs 
+#### 6.1.5 Clustering and Numerical Combs
 ```{r}
 # All this is necessary since the function that creates the 
 campaign_train <- smote_train_df$campaign
@@ -448,15 +479,18 @@ model_results <- rbind(model_results, evaluate_model(model=logit_cluster_num_com
                                                      holdout=scale_df(num_combinations(clustered$test)),
                                                      "logit_cluster_num_comb"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
-### 6.2 Random Forest
 
+### 6.2 Random Forest
 #### 6.2.1 Drop Day
 
 The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
-
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -475,14 +509,16 @@ if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_drop_day, holdout=holdout, "rf_drop_day"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
 #### 6.2.2 Drop Pdays
-
 The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.
-
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -501,13 +537,15 @@ if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_drop_pdays, holdout=holdout, "rf_drop_pdays"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 #### 6.2.3 Clustering
-
 The third engineered feature will cluster based on customer-related features.
-
 ```{r}
 
 clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
@@ -531,13 +569,16 @@ model_results <- rbind(model_results, evaluate_model(model=rf_cluster,
                                                      holdout=scale_df(clustered$test),
                                                      "rf_cluster"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
+
 #### 6.2.4 Numerical Combinations
-
 The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations are the same as the ones under 6.1.4 for the logistic model.
-
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_numerical_comb.rds")) {
   print("Model already trained, reading from file...")
@@ -556,16 +597,17 @@ if(file.exists("./saved_models/no_duration/rf_numerical_comb.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_numerical_comb, holdout=num_combinations(holdout), "rf_numerical_comb"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
 ## 6. Hyperparameter Tuning
-
 ### 6.1 Random Forest
-
-The hyperparameters to be tuned for the Ranger implementation will be mtry (the number of variables that can split a node), splitrule (using gini [information gain] or extratrees [randomly chosen cut points]), and the minimum node size. As the all of the engineered features individually worsened model performance (and therefore were not attempted in combination), the model well be tuned with the original variables.
-
+The hyperparameters to be tuned for the Ranger implementation will be mtry (the number of variables that can split a node), splitrule (using gini [information gain] or extratrees [randomly chosen cut points]), and the minimum node size. As the all of the engineered features individually worsened model performance (and therefore were not attempted in combination), the model will be tuned with the original variables.
 ```{r}
 
 if(file.exists("./saved_models/no_duration/rf_tuned.rds")) {
@@ -585,24 +627,27 @@ if(file.exists("./saved_models/no_duration/rf_tuned.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_tuned, holdout=holdout, "rf_tuned"))
 
-kable(model_results)
+DT::datatable(model_results, 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
 
 ## 7. Results
-
-All our results are now written into a csv 
-
-!! EXPLAIN RESULTS AND LINK SHINY!!
-
+All our results are now written into a csv. We can see the superior model was the logit_cluster model with a holdout sensitivity **0.381609195402299** and cross validated sensitivity of **0.569281914893617**. More indepth results can be the seen in the shiny app.
 ```{r}
 fwrite(model_results, "./Data/model_results_no_duration.csv")
-fread("./Data/model_results_no_duration.csv")
+
+DT::datatable(fread("./Data/model_results_no_duration.csv"), 
+         extensions = c('FixedColumns',"FixedHeader"),
+          options = list(scrollX = TRUE, 
+                         paging=TRUE,
+                         fixedHeader=TRUE))
 ```
 
-
 ## 8. Predict on blind Test Set
-
 ```{r}
 fixed_validation_df <- fix_types(create_weekday(drop_duration(raw_bank_test)))
 scaled_validation_df <- scale_df(fixed_validation_df)
@@ -612,6 +657,6 @@ prediction<-predict(logit_cluster, data = clustered_validation_df, type='raw')
 write.csv(prediction, file = "Data/output.csv")
 ```
 
-## 9. Conclusion
 
-To summarize, “duration” variable was removed, because, as already explained, we cannot know the duration of a call before the call happened. We saw that our baseline including this variable performed better than our final model, however, from a business perspective we will not be able to deploy this model in reality thus we remove it taking into account a worse performance of our model. In addition, since we have an unbalanced dataset (with more NOs than YESs in the target variable) we had to oversample the positive label to have a balanced dataset which yields significant improvement in our model. While monitoring and performing cross validation on the train set, the models don’t look bad but let’s not forget that it has synthetic data in it which does not accurately represent reality. So, we created an hold out test set based on our unbalanced dataset which is closer to reality getting new data on a daily basis and we tested the model on it. The model that performed best on this holdout set is the logistic regression model with a sensitivity of 38.2% showing lower sensitivity but more stable and realistic results. We used this model then at the end to make predictions on our blind test set. 
+## 9. Conclusion
+To summarize, “duration” variable was removed, because, as already explained, we cannot know the duration of a call before the call happened. We saw that our baseline including this variable performed better than our final model, however, from a business perspective we will not be able to deploy this model in reality thus we remove it taking into account a worse performance of our model. In addition, since we have an unbalanced dataset (with more NOs than Yes in the target variable) we had to oversample the positive label to have a balanced dataset which yields significant improvement in our model. While monitoring and performing cross validation on the train set, the models don’t look bad but let’s not forget that it has synthetic data in it which does not accurately represent reality. So, we created an hold out test set based on our unbalanced dataset which is closer to reality getting new data on a daily basis and we tested the model on it. The model that performed best on this holdout set is the logistic regression model with a sensitivity of 38.2% showing lower sensitivity but more stable and realistic results. We used this model then at the end to make predictions on our blind test set. 
