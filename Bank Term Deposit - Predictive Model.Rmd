@@ -5,6 +5,25 @@ date: "6/3/2019"
 output: html_document
 ---
 
+## 1. Introduction
+
+Once we have understood our dataset through EDA, which can be found in the previous R markdown (Bank Term Deposit - Data Exploration), we proceed to create our predictive model using the following approach:
+
+*Data Preparation - Fixing variable types, balancing the dataset and doing the train/test split
+
+*Baseline model - Evaluating metrics on three different models: Logistic Regression, Random Forest and XGBoost.
+
+*Feature Engineering - Attempting to create new variables to better predict the classes of our target variable.
+
+*Model Selection - Compare the performance on the holdout on all models with the best generated features
+
+*Model Tuning - Perform a grid search to get the best parameters on our selected best model
+
+Now we will explain in detail all the previously mentioned steps.
+
+
+
+##### Loading data and libraries
 ```{r setup}
 source('./load_libraries.R')
 
@@ -14,7 +33,7 @@ raw_bank_test <- fread("Data/BankCamp_test.csv")
 ```
 
 
-## 1. SMOTE
+## 2. SMOTE
 
 As seen during the data exploration stage, the train data set has a relative imbalance with regards to the target variable (with the positive classification being the minority). If models were trained on this data as-is, there would be a greater bias towards the majority class leading to improper predictions (particularly a higher proportion of false negatives). To deal with this, the Synthetic Minority Oversampling Technique ("SMOTE") will be utilized. With the given parameters, 5 examples will be created of each original minority class. 
 
@@ -38,13 +57,13 @@ print(summary(smote_train_df))
 ```
 
 
-## 2.  Baselines
+## 3.  Baselines
 
 For this classification task, logistic regression, the ranger implementation of Random Forest, and XG Boost were attempted. As can be seen, as-is the inclusion of a duration yields good results metrics (particularly sensitivity) at this early stage. However, as this would not realistically be available in production, it will be excluded from the model.
 
 
-### 2.1 Logit
-```{r}
+### 3.1 Logit
+```{r, warning=FALSE, message=FALSE}
 
 if(file.exists("./saved_models/logit_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
@@ -67,8 +86,8 @@ kable(model_results)
 ```
 
 
-### 2.2 Random Forest
-```{r}
+### 3.2 Random Forest
+```{r, message=FALSE, warning=FALSE}
 if(file.exists("./saved_models/rf_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
   rf_baseline_smote <- readRDS("./saved_models/rf_baseline_smote.rds")
@@ -89,7 +108,7 @@ kable(model_results)
 ```
 
 
-### 2.3 XG Boost
+### 3.3 XG Boost
 ```{r}
 if(file.exists("./saved_models/xgb_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
@@ -115,11 +134,11 @@ kable(model_results)
 ```
 
 
-## 3. Remove Duration
+## 4. Remove Duration Variable
 
 As previously stated, duration is not something we would have at time of prediction, so using it would be considered cheating. These next steps repeat the above processes but on data generated via SMOTE that excludes the duration feature.
 
-### 3.1 SMOTE
+### 4.1 SMOTE
 ```{r}
 fixed_train_df <- fix_types(create_weekday(drop_duration(raw_bank_train)))
 train_test <- f_partition(fixed_train_df, test_proportion=0.1, seed=20190603)
@@ -139,11 +158,11 @@ print(summary(smote_train_df))
 ```
 
 
-### 3.2 Baselines
+### 4.2 Baselines
 
 Once again, baseline models are run though this time without the inclusion of the “duration” variable. As can be seen below, the sensitivity metric drops quite drastically with logistic regression having the highest value at this stage. Due to poor performance, the XG Boost will be excluded.
 
-#### 3.2.1 Logit
+#### 4.2.1 Logit
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
@@ -166,7 +185,7 @@ kable(model_results)
 ```
 
 
-#### 3.2.2 Random Forest
+#### 4.2.2 Random Forest
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
@@ -188,7 +207,7 @@ kable(model_results)
 ```
 
 
-#### 3.2.3 XG Boost
+#### 4.2.3 XG Boost
 ```{r}
 if(file.exists("./saved_models/no_duration/xgb_baseline_smote.rds")) {
   print("Model already trained, reading from file...")
@@ -214,11 +233,11 @@ kable(model_results)
 ```
 
 
-### 3.3 Scaling for Tree-Based Models
+## 5. Scaling for Tree-Based Models
 In this stage, scaling is applied to the data and run using the tree-based models. Although this results in very high sensitivity, this is at the expense of the other metrics which fall drastically. This outcome is due to the models predicting essentially all observations in the positive class (meaning that nearly all positives are correctly identified with nearly all negatives incorrectly identified)
 
 
-#### 3.3.1 Random Forest
+### 5.1 Random Forest
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_scaled.rds")) {
   print("Model already trained, reading from file...")
@@ -243,7 +262,7 @@ kable(model_results)
 ```
 
 
-#### 3.3.2 XG Boost
+### 5.2 XG Boost
 ```{r}
 if(file.exists("./saved_models/no_duration/xgb_scaled.rds")) {
   print("Model already trained, reading from file...")
@@ -272,13 +291,14 @@ kable(model_results)
 ```
 
 
-## Feature Engineering
-######################################################## Logit Model ######################################################
-###########################################################################################################################
-###########################################################################################################################
+## 6. Feature Engineering
 
-### FE1: Drop Day
+### 6.1 Logit Regression
+
+#### 6.1.1 Drop Day
+
 The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
+
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -298,7 +318,7 @@ kable(model_results)
 ```
 
 
-### FE2: Drop Pdays
+#### 6.1.2 Drop Pdays
 The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_pdays.rds")) {
@@ -321,8 +341,10 @@ kable(model_results)
 ```
 
 
-### FE3: Clustering
+#### 6.1.3 Clustering
+
 The third engineered feature will cluster based on customer-related features.
+
 ```{r}
 
 clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
@@ -347,27 +369,31 @@ kable(model_results)
 ```
 
 
-### FE4: Numerical Combinations
+#### 6.1.4 Numerical Combinations
+
 The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
 
 Multiplication Based:
-p_campaign_previous = campaign * previous
-p_balance_campaign = balance * campaign
-p_campaign_age = campaign * age
-p_balance_previous = balance * previous
-p_balance_age = balance * age
-age_previous = age * previous
+
+*p_campaign_previous = campaign x previous
+*p_balance_campaign = balance x campaign
+*p_campaign_age = campaign x age
+*p_balance_previous = balance x previous
+*p_balance_age = balance x age
+*age_previous = age x previous
 
 Addition Based:
-s_campaign_age = campaign + age
-s_campaing_previous = campaign + previous
+
+*s_campaign_age = campaign + age
+*s_campaing_previous = campaign + previous
 
 Non-linear combinations:
-balance_sq = balance * balance
-age_sq = age * age
-age_log = log(age)
-age_sqrt = sqrt(age)
-previous_sq = previous * previous
+
+*balance_sq = balance x balance
+*age_sq = age x age
+*age_log = log(age)
+*age_sqrt = sqrt(age)
+*previous_sq = previous x previous
   
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_numerical_combination.rds")) {
@@ -390,7 +416,7 @@ kable(model_results)
 ```
 
 
-### FE5: Clustering and Numerical Combs 
+#### 6.1.5 Clustering and Numerical Combs 
 ```{r}
 # All this is necessary since the function that creates the 
 campaign_train <- smote_train_df$campaign
@@ -425,13 +451,12 @@ model_results <- rbind(model_results, evaluate_model(model=logit_cluster_num_com
 kable(model_results)
 ```
 
+### 6.2 Random Forest
 
-###################################################### Random Forest ######################################################
-###########################################################################################################################
-########################################################################################################################### 
+#### 6.2.1 Drop Day
 
-### FE1: Drop Day
 The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
+
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -454,8 +479,10 @@ kable(model_results)
 ```
 
 
-### FE2: Drop Pdays
+#### 6.2.2 Drop Pdays
+
 The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.
+
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -477,8 +504,10 @@ model_results <- rbind(model_results, evaluate_model(model=rf_drop_pdays, holdou
 kable(model_results)
 ```
 
-### FE3: Clustering
+#### 6.2.3 Clustering
+
 The third engineered feature will cluster based on customer-related features.
+
 ```{r}
 
 clustered <- clustering(df_train=smote_train_df, df_test=holdout, n_clusters=4)
@@ -505,27 +534,10 @@ model_results <- rbind(model_results, evaluate_model(model=rf_cluster,
 kable(model_results)
 ```
 
-### FE4: Numerical Combinations
-The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
+#### 6.2.4 Numerical Combinations
 
-Multiplication Based:
-p_campaign_previous = campaign * previous
-p_balance_campaign = balance * campaign
-p_campaign_age = campaign * age
-p_balance_previous = balance * previous
-p_balance_age = balance * age
-age_previous = age * previous
+The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations are the same as the ones under 6.1.4 for the logistic model.
 
-Addition Based:
-s_campaign_age = campaign + age
-s_campaing_previous = campaign + previous
-
-Non-linear combinations:
-balance_sq = balance * balance
-age_sq = age * age
-age_log = log(age)
-age_sqrt = sqrt(age)
-previous_sq = previous * previous
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_numerical_comb.rds")) {
   print("Model already trained, reading from file...")
@@ -548,9 +560,12 @@ kable(model_results)
 ```
 
 
-## Hyperparameter Tuning
-### Random Forest
+## 6. Hyperparameter Tuning
+
+### 6.1 Random Forest
+
 The hyperparameters to be tuned for the Ranger implementation will be mtry (the number of variables that can split a node), splitrule (using gini [information gain] or extratrees [randomly chosen cut points]), and the minimum node size. As the all of the engineered features individually worsened model performance (and therefore were not attempted in combination), the model well be tuned with the original variables.
+
 ```{r}
 
 if(file.exists("./saved_models/no_duration/rf_tuned.rds")) {
@@ -574,14 +589,20 @@ kable(model_results)
 ```
 
 
-# Write results to a CSV
+## 7. Results
+
+All our results are now written into a csv 
+
+!! EXPLAIN RESULTS AND LINK SHINY!!
+
 ```{r}
 fwrite(model_results, "./Data/model_results_no_duration.csv")
 fread("./Data/model_results_no_duration.csv")
 ```
 
 
-# Predict on Test Set
+## 8. Predict on blind Test Set
+
 ```{r}
 fixed_validation_df <- fix_types(create_weekday(drop_duration(raw_bank_test)))
 scaled_validation_df <- scale_df(fixed_validation_df)
@@ -590,3 +611,7 @@ clustered_validation_df <- clustering(df_train=smote_train_df, df_test=scaled_va
 prediction<-predict(logit_cluster, data = clustered_validation_df, type='raw')
 write.csv(prediction, file = "Data/output.csv")
 ```
+
+## 9. Conclusion
+
+To summarize, “duration” variable was removed, because, as already explained, we cannot know the duration of a call before the call happened. We saw that our baseline including this variable performed better than our final model, however, from a business perspective we will not be able to deploy this model in reality thus we remove it taking into account a worse performance of our model. In addition, since we have an unbalanced dataset (with more NOs than YESs in the target variable) we had to oversample the positive label to have a balanced dataset which yields significant improvement in our model. While monitoring and performing cross validation on the train set, the models don’t look bad but let’s not forget that it has synthetic data in it which does not accurately represent reality. So, we created an hold out test set based on our unbalanced dataset which is closer to reality getting new data on a daily basis and we tested the model on it. The model that performed best on this holdout set is the logistic regression model with a sensitivity of 38.2% showing lower sensitivity but more stable and realistic results. We used this model then at the end to make predictions on our blind test set. 
