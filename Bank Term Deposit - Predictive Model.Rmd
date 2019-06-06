@@ -9,12 +9,13 @@ output: html_document
 
 Once we have understood our dataset through EDA, which can be found in the previous R markdown (Bank Term Deposit - Data Exploration), we proceed to create our predictive model using the following approach:
 
-*Data Preparation - Fixing variable types, balancing the dataset and doing the train/test split
-*Baseline model - Evaluating metrics on three different models: Logistic Regression, Random Forest and XGBoost.
-*Feature Engineering - Attempting to create new variables to better predict the classes of our target variable.
-*Model Selection - Compare the performance on the holdout on all models with the best generated features
-*Model Tuning - Perform a grid search to get the best parameters on our selected best model
-Now we will explain in detail all the previously mentioned steps.
+-Data Preparation: Fixing variable types, balancing the dataset and doing the train/test split <br />
+-Baseline model: Evaluating metrics on three different models: Logistic Regression, Random Forest and XGBoost. <br />
+-Feature Engineering: Attempting to create new variables to better predict the classes of our target variable. <br />
+-Model Selection: Compare the performance on the holdout on all models with the best generated features <br />
+-Model Tuning: Perform a grid search to get the best parameters on our selected best model <br />
+
+Now we will explain in detail all the previously mentioned steps. <br />
 
 ```{r setup}
 source('./load_libraries.R')
@@ -320,7 +321,7 @@ DT::datatable(model_results,
 ### 6.1 Logit Regression
 #### 6.1.1 Drop Day
 
-The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
+The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, the variable will be included in the final model as removing it worsens performance.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -345,7 +346,7 @@ DT::datatable(model_results,
 
 
 #### 6.1.2 Drop Pdays
-The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.
+The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, this variable will be kept in the model.
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_drop_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -402,26 +403,26 @@ DT::datatable(model_results,
 
 
 #### 6.1.4 Numerical Combinations
-The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:
+The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following: <br />
 
-Multiplication Based:
-*p_campaign_previous = campaign x previous
-*p_balance_campaign = balance x campaign
-*p_campaign_age = campaign x age
-*p_balance_previous = balance x previous
-*p_balance_age = balance x age
-*age_previous = age x previous
+Multiplication Based: <br />
+-p_campaign_previous = campaign x previous <br />
+-p_balance_campaign = balance x campaign <br />
+-p_campaign_age = campaign x age <br />
+-p_balance_previous = balance x previous <br />
+-p_balance_age = balance x age <br />
+-age_previous = age x previous <br />
 
-Addition Based:
-*s_campaign_age = campaign + age
-*s_campaing_previous = campaign + previous
-Non-linear combinations:
+Addition Based: <br />
+-s_campaign_age = campaign + age <br />
+-s_campaing_previous = campaign + previous <br />
 
-*balance_sq = balance x balance
-*age_sq = age x age
-*age_log = log(age)
-*age_sqrt = sqrt(age)
-*previous_sq = previous x previous
+Non-linear combinations: <br />
+-balance_sq = balance x balance <br />
+-age_sq = age x age <br />
+-age_log = log(age) <br />
+-age_sqrt = sqrt(age) <br />
+-previous_sq = previous x previous <br />
 ```{r}
 if(file.exists("./saved_models/no_duration/logit_numerical_combination.rds")) {
   print("Model already trained, reading from file...")
@@ -447,7 +448,7 @@ DT::datatable(model_results,
 ```
 
 
-#### 6.1.5 Clustering and Numerical Combs
+#### 6.1.5 Clustering and Numerical Combinations
 ```{r}
 # All this is necessary since the function that creates the 
 campaign_train <- smote_train_df$campaign
@@ -490,7 +491,7 @@ DT::datatable(model_results,
 ### 6.2 Random Forest
 #### 6.2.1 Drop Day
 
-The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.
+The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, the variable will be included in the final model as removing it worsens performance.
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
   print("Model already trained, reading from file...")
@@ -518,7 +519,7 @@ DT::datatable(model_results,
 
 
 #### 6.2.2 Drop Pdays
-The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.
+The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, this variable will be kept in the model.
 ```{r}
 if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
   print("Model already trained, reading from file...")
@@ -648,6 +649,7 @@ DT::datatable(fread("./Data/model_results_no_duration.csv"),
 ```
 
 ## 8. Predict on blind Test Set
+The the final prediction on the blind Test Set results in approximately a 30/70 split with regards to the target distribution. Normally one might expect to see a similar distribution to the original test set, however given the use of SMOTE to deal with the minority class, relatively low sensitivity in training, among other factors the two distributions would be expected to not quite match.
 ```{r}
 fixed_validation_df <- fix_types(create_weekday(drop_duration(raw_bank_test)))
 scaled_validation_df <- scale_df(fixed_validation_df)
@@ -655,6 +657,8 @@ clustered_validation_df <- clustering(df_train=smote_train_df, df_test=scaled_va
 
 prediction<-predict(logit_cluster, data = clustered_validation_df, type='raw')
 write.csv(prediction, file = "Data/output.csv")
+
+summary(prediction)
 ```
 
 

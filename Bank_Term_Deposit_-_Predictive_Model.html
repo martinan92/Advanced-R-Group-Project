@@ -143,7 +143,8 @@ $(document).ready(function () {
 <div id="introduction" class="section level2">
 <h2>1. Introduction</h2>
 <p>Once we have understood our dataset through EDA, which can be found in the previous R markdown (Bank Term Deposit - Data Exploration), we proceed to create our predictive model using the following approach:</p>
-<p><em>Data Preparation - Fixing variable types, balancing the dataset and doing the train/test split </em>Baseline model - Evaluating metrics on three different models: Logistic Regression, Random Forest and XGBoost. <em>Feature Engineering - Attempting to create new variables to better predict the classes of our target variable. </em>Model Selection - Compare the performance on the holdout on all models with the best generated features *Model Tuning - Perform a grid search to get the best parameters on our selected best model Now we will explain in detail all the previously mentioned steps.</p>
+<p>-Data Preparation: Fixing variable types, balancing the dataset and doing the train/test split <br /> -Baseline model: Evaluating metrics on three different models: Logistic Regression, Random Forest and XGBoost. <br /> -Feature Engineering: Attempting to create new variables to better predict the classes of our target variable. <br /> -Model Selection: Compare the performance on the holdout on all models with the best generated features <br /> -Model Tuning: Perform a grid search to get the best parameters on our selected best model <br /></p>
+<p>Now we will explain in detail all the previously mentioned steps. <br /></p>
 <pre class="r"><code>source('./load_libraries.R')
 
 raw_bank_train &lt;- fread(&quot;Data/BankCamp_train.csv&quot;)
@@ -502,7 +503,7 @@ DT::datatable(model_results,
 <h3>6.1 Logit Regression</h3>
 <div id="drop-day" class="section level4">
 <h4>6.1.1 Drop Day</h4>
-<p>The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.</p>
+<p>The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, the variable will be included in the final model as removing it worsens performance.</p>
 <pre class="r"><code>if(file.exists(&quot;./saved_models/no_duration/logit_drop_day.rds&quot;)) {
   print(&quot;Model already trained, reading from file...&quot;)
   logit_drop_day &lt;- readRDS(&quot;./saved_models/no_duration/logit_drop_day.rds&quot;)
@@ -526,7 +527,7 @@ DT::datatable(model_results,
 </div>
 <div id="drop-pdays" class="section level4">
 <h4>6.1.2 Drop Pdays</h4>
-<p>The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.</p>
+<p>The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, this variable will be kept in the model.</p>
 <pre class="r"><code>if(file.exists(&quot;./saved_models/no_duration/logit_drop_pdays.rds&quot;)) {
   print(&quot;Model already trained, reading from file...&quot;)
   logit_drop_pdays &lt;- readRDS(&quot;./saved_models/no_duration/logit_drop_pdays.rds&quot;)
@@ -582,10 +583,10 @@ DT::datatable(model_results,
 </div>
 <div id="numerical-combinations" class="section level4">
 <h4>6.1.4 Numerical Combinations</h4>
-<p>The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following:</p>
-<p>Multiplication Based: <em>p_campaign_previous = campaign x previous </em>p_balance_campaign = balance x campaign <em>p_campaign_age = campaign x age </em>p_balance_previous = balance x previous <em>p_balance_age = balance x age </em>age_previous = age x previous</p>
-<p>Addition Based: <em>s_campaign_age = campaign + age </em>s_campaing_previous = campaign + previous Non-linear combinations:</p>
-<p><em>balance_sq = balance x balance </em>age_sq = age x age <em>age_log = log(age) </em>age_sqrt = sqrt(age) *previous_sq = previous x previous</p>
+<p>The fourth engineered feature attempted was creating a numerical combinations of existing variables. These combinations include the following: <br /></p>
+<p>Multiplication Based: <br /> -p_campaign_previous = campaign x previous <br /> -p_balance_campaign = balance x campaign <br /> -p_campaign_age = campaign x age <br /> -p_balance_previous = balance x previous <br /> -p_balance_age = balance x age <br /> -age_previous = age x previous <br /></p>
+<p>Addition Based: <br /> -s_campaign_age = campaign + age <br /> -s_campaing_previous = campaign + previous <br /></p>
+<p>Non-linear combinations: <br /> -balance_sq = balance x balance <br /> -age_sq = age x age <br /> -age_log = log(age) <br /> -age_sqrt = sqrt(age) <br /> -previous_sq = previous x previous <br /></p>
 <pre class="r"><code>if(file.exists(&quot;./saved_models/no_duration/logit_numerical_combination.rds&quot;)) {
   print(&quot;Model already trained, reading from file...&quot;)
   logit_numerical_combination &lt;- readRDS(&quot;./saved_models/no_duration/logit_numerical_combination.rds&quot;)
@@ -611,8 +612,8 @@ DT::datatable(model_results,
 <div id="htmlwidget-acbf55dd7689df1654c0" style="width:100%;height:auto;" class="datatables html-widget"></div>
 <script type="application/json" data-for="htmlwidget-acbf55dd7689df1654c0">{"x":{"filter":"none","extensions":["FixedColumns","FixedHeader"],"data":[["1","2","3","4","5","6","7","8","9"],["logit_baseline_smote","rf_baseline_smote","xgb_baseline_smote","rf_scaled","xgb_scaled","logit_drop_day","logit_drop_pdays","logit_cluster","logit_numerical_combination"],[0.370114942528736,0.347126436781609,0.2,0.963218390804598,1,0.358620689655172,0.36551724137931,0.381609195402299,0.379310344827586],[0.876492771841609,0.936203645505971,0.978944060339409,0.0615964802011314,0.000942803268384664,0.882463859208045,0.881521055939661,0.87806411062225,0.877749842866122],[0.290613718411552,0.426553672316384,0.564935064935065,0.123054331864905,0.120365246264527,0.294339622641509,0.296641791044776,0.299638989169675,0.297833935018051],[0.815593032900194,0.865358031517832,0.885264030964888,0.1700304119436,0.121094829969588,0.819463643903788,0.819463643903788,0.818357755045618,0.817804810616533],[161,151,87,419,435,156,159,166,165],[393,203,67,2986,3179,374,377,388,389],[274,284,348,16,0,279,276,269,270],[2789,2979,3115,196,3,2808,2805,2794,2793],[0.81918929077747,0.967568031056763,0.952269129483294,0.967792310391718,0.952472918965884,0.810754101900545,0.817682686472333,0.816138821781345,0.824779246403472],[0.572473404255319,0.821054964539007,0.802792553191489,0.822429078014184,0.80709219858156,0.557845744680851,0.570345744680851,0.569281914893617,0.58209219858156],[0.889627758442408,0.98039891350841,0.982872334742784,0.979734101938968,0.981994634850129,0.89130311423828,0.887367057897633,0.890425520442849,0.890372331782672],[0.756850111620383,0.961731936954306,0.965667140262875,0.960567583631476,0.964143366465494,0.754843452201115,0.752528063489889,0.757122179660327,0.761084747097742],[0.770694868133703,0.920644915819327,0.915342390602141,0.92074469213547,0.916406185852761,0.766256574759246,0.768484098237374,0.769996709942017,0.774767296503699],["parameter:1","mtry:15, splitrule:1, min.node.size:5","nrounds:500, max_depth:1, eta:0.4, gamma:10, colsample_bytree:0.5, min_child_weight:5, subsample:0.9","mtry:15, splitrule:1, min.node.size:5","nrounds:500, max_depth:1, eta:0.4, gamma:10, colsample_bytree:0.5, min_child_weight:5, subsample:0.9","parameter:1","parameter:1","parameter:1","parameter:1"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>model_name<\/th>\n      <th>holdout_Sensitivity<\/th>\n      <th>holdout_Specificity<\/th>\n      <th>holdout_Precision<\/th>\n      <th>holdout_Accuracy<\/th>\n      <th>holdout_TP<\/th>\n      <th>holdout_FP<\/th>\n      <th>holdout_FN<\/th>\n      <th>holdout_TN<\/th>\n      <th>cv_AUC<\/th>\n      <th>cv_Sensitivity<\/th>\n      <th>cv_Specificity<\/th>\n      <th>cv_Precision<\/th>\n      <th>cv_Accuracy<\/th>\n      <th>best_params<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"paging":true,"fixedHeader":true,"columnDefs":[{"className":"dt-right","targets":[2,3,4,5,6,7,8,9,10,11,12,13,14]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
 </div>
-<div id="clustering-and-numerical-combs" class="section level4">
-<h4>6.1.5 Clustering and Numerical Combs</h4>
+<div id="clustering-and-numerical-combinations" class="section level4">
+<h4>6.1.5 Clustering and Numerical Combinations</h4>
 <pre class="r"><code># All this is necessary since the function that creates the 
 campaign_train &lt;- smote_train_df$campaign
 previous_train &lt;- smote_train_df$previous
@@ -657,7 +658,7 @@ if(file.exists(&quot;./saved_models/no_duration/logit_cluster_num_comb.rds&quot;
 <h3>6.2 Random Forest</h3>
 <div id="drop-day-1" class="section level4">
 <h4>6.2.1 Drop Day</h4>
-<p>The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, it will not be included in the final model as it worsens performance.</p>
+<p>The first engineered feature attempted was dropping the day column as there was no clear relationship in the data exploration. However, the variable will be included in the final model as removing it worsens performance.</p>
 <pre class="r"><code>if(file.exists(&quot;./saved_models/no_duration/rf_drop_day.rds&quot;)) {
   print(&quot;Model already trained, reading from file...&quot;)
   rf_drop_day &lt;- readRDS(&quot;./saved_models/no_duration/rf_drop_day.rds&quot;)
@@ -685,7 +686,7 @@ DT::datatable(model_results,
 </div>
 <div id="drop-pdays-1" class="section level4">
 <h4>6.2.2 Drop Pdays</h4>
-<p>The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, it will not be included in the final model.</p>
+<p>The second engineered feature attempted was dropping the pdays column for similar reasons as dropping the day. As this had a negative effect on the model, this variable will be kept in the model.</p>
 <pre class="r"><code>if(file.exists(&quot;./saved_models/no_duration/rf_drop_pdays.rds&quot;)) {
   print(&quot;Model already trained, reading from file...&quot;)
   rf_drop_pdays &lt;- readRDS(&quot;./saved_models/no_duration/rf_drop_pdays.rds&quot;)
@@ -819,12 +820,17 @@ DT::datatable(fread(&quot;./Data/model_results_no_duration.csv&quot;),
 </div>
 <div id="predict-on-blind-test-set" class="section level2">
 <h2>8. Predict on blind Test Set</h2>
+<p>The the final prediction on the blind Test Set results in approximately a 30/70 split with regards to the target distribution. Normally one might expect to see a similar distribution to the original test set, however given the use of SMOTE to deal with the minority class, relatively low sensitivity in training, among other factors the two distributions would be expected to not quite match.</p>
 <pre class="r"><code>fixed_validation_df &lt;- fix_types(create_weekday(drop_duration(raw_bank_test)))
 scaled_validation_df &lt;- scale_df(fixed_validation_df)
 clustered_validation_df &lt;- clustering(df_train=smote_train_df, df_test=scaled_validation_df, n_clusters=4)
 
 prediction&lt;-predict(logit_cluster, data = clustered_validation_df, type='raw')
-write.csv(prediction, file = &quot;Data/output.csv&quot;)</code></pre>
+write.csv(prediction, file = &quot;Data/output.csv&quot;)
+
+summary(prediction)</code></pre>
+<pre><code>##   yes    no 
+## 17001 43159</code></pre>
 </div>
 <div id="conclusion" class="section level2">
 <h2>9. Conclusion</h2>
