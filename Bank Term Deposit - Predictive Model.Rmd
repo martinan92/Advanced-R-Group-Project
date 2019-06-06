@@ -1,6 +1,6 @@
 ---
-title: "Advanced R Group Project"
-author: "Group C"
+title: "Bank Term Deposit - Predictive Model"
+author: "O-1 R Masters"
 date: "6/3/2019"
 output: html_document
 ---
@@ -27,7 +27,7 @@ holdout <- train_test$test
 
 if(file.exists("./Data/smote_train.csv")) {
   print("SMOTE already created, reading from file...")
-  smote_train_df <- fread("./Data/smote_train.csv")
+  smote_train_df <- fix_types(fread("./Data/smote_train.csv"))
 } else {
   smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
   fwrite(smote_train_df, file = "Data/smote_train.csv")
@@ -128,7 +128,7 @@ holdout <- train_test$test
   
 if(file.exists("./Data/smote_train_no_duration.csv")) {
   print("SMOTE already created, reading from file...")
-  smote_train_df <- fread("./Data/smote_train_no_duration.csv")
+  smote_train_df <- fix_types(fread("./Data/smote_train_no_duration.csv"))
 } else {
   smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
   fwrite(smote_train_df, file = "Data/smote_train_no_duration.csv")
@@ -576,4 +576,14 @@ model_results
 ```{r}
 fwrite(model_results, "./Data/model_results_no_duration.csv")
 fread("./Data/model_results_no_duration.csv")
+```
+
+
+# Predict on Test Set
+```{r}
+scaled_validation<-scale_df(raw_bank_test)
+clustered_validation <- clustering(df_train=smote_train_df, df_test=scaled_validation, n_clusters=4)
+
+prediction<-predict(logit_cluster, data = clustered_validation, type='raw')
+write.csv(prediction, file = "Data/output.csv")
 ```
