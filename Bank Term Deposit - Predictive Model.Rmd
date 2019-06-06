@@ -27,7 +27,8 @@ holdout <- train_test$test
 
 if(file.exists("./Data/smote_train.csv")) {
   print("SMOTE already created, reading from file...")
-  smote_train_df <- fix_types(fread("./Data/smote_train.csv"))
+  smote_train_df <- fread("./Data/smote_train.csv")
+  smote_train_df$y <- factor(smote_train_df$y, levels=c("yes", "no"))
 } else {
   smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
   fwrite(smote_train_df, file = "Data/smote_train.csv")
@@ -61,7 +62,7 @@ logit_results <- evaluate_model(model=logit_baseline_smote, holdout=scale_df(hol
 model_results <- setNames(data.table(matrix(nrow = 0, ncol = 15)), names(logit_results))
 model_results <- rbind(model_results, logit_results)
 
-model_results
+kable(model_results)
 
 ```
 
@@ -83,7 +84,7 @@ if(file.exists("./saved_models/rf_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_baseline_smote, holdout=holdout, "rf_baseline_smote"))
 
-model_results
+kable(model_results)
 
 ```
 
@@ -110,7 +111,7 @@ if(file.exists("./saved_models/xgb_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, holdout=holdout, "xgb_baseline_smote"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -128,7 +129,8 @@ holdout <- train_test$test
   
 if(file.exists("./Data/smote_train_no_duration.csv")) {
   print("SMOTE already created, reading from file...")
-  smote_train_df <- fix_types(fread("./Data/smote_train_no_duration.csv"))
+  smote_train_df <- fread("./Data/smote_train.csv")
+  smote_train_df$y <- factor(smote_train_df$y, levels=c("yes", "no"))
 } else {
   smote_train_df <- SMOTE(y ~ ., train_to_smote, perc.over = 500)
   fwrite(smote_train_df, file = "Data/smote_train_no_duration.csv")
@@ -159,7 +161,7 @@ logit_results <- evaluate_model(model=logit_baseline_smote, holdout=scale_df(hol
 model_results <- setNames(data.table(matrix(nrow = 0, ncol = 15)), names(logit_results))
 model_results <- rbind(model_results, logit_results)
 
-model_results
+kable(model_results)
 
 ```
 
@@ -181,7 +183,7 @@ if(file.exists("./saved_models/no_duration/rf_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_baseline_smote, holdout=holdout, "rf_baseline_smote"))
 
-model_results
+kable(model_results)
 
 ```
 
@@ -208,7 +210,7 @@ if(file.exists("./saved_models/no_duration/xgb_baseline_smote.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=xgb_baseline_smote, holdout=holdout, "xgb_baseline_smote"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -236,7 +238,7 @@ if(file.exists("./saved_models/no_duration/rf_scaled.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_scaled, holdout=scale_df(holdout), "rf_scaled"))
 
-model_results
+kable(model_results)
 
 ```
 
@@ -266,7 +268,7 @@ if(file.exists("./saved_models/no_duration/xgb_scaled.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=xgb_scaled, holdout=scale_df(holdout), "xgb_scaled"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -291,7 +293,7 @@ if(file.exists("./saved_models/no_duration/logit_drop_day.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=logit_drop_day, holdout=scale_df(holdout), "logit_drop_day"))
 
-model_results
+kable(model_results)
 
 ```
 
@@ -315,7 +317,7 @@ model_results <- rbind(model_results,
                                       holdout=scale_df(holdout),
                                       "logit_drop_pdays"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -341,7 +343,7 @@ model_results <- rbind(model_results, evaluate_model(model=logit_cluster,
                                                      holdout=scale_df(clustered$test),
                                                      "logit_cluster"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -384,7 +386,7 @@ model_results <- rbind(model_results,
                                       holdout=scale_df(num_combinations(holdout)),
                                       "logit_numerical_combination"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -420,7 +422,7 @@ model_results <- rbind(model_results, evaluate_model(model=logit_cluster_num_com
                                                      holdout=scale_df(num_combinations(clustered$test)),
                                                      "logit_cluster_num_comb"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -448,7 +450,7 @@ if(file.exists("./saved_models/no_duration/rf_drop_day.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_drop_day, holdout=holdout, "rf_drop_day"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -472,7 +474,7 @@ if(file.exists("./saved_models/no_duration/rf_drop_pdays.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_drop_pdays, holdout=holdout, "rf_drop_pdays"))
 
-model_results
+kable(model_results)
 ```
 
 ### FE3: Clustering
@@ -500,7 +502,7 @@ model_results <- rbind(model_results, evaluate_model(model=rf_cluster,
                                                      holdout=scale_df(clustered$test),
                                                      "rf_cluster"))
 
-model_results
+kable(model_results)
 ```
 
 ### FE4: Numerical Combinations
@@ -542,7 +544,7 @@ if(file.exists("./saved_models/no_duration/rf_numerical_comb.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_numerical_comb, holdout=num_combinations(holdout), "rf_numerical_comb"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -568,7 +570,7 @@ if(file.exists("./saved_models/no_duration/rf_tuned.rds")) {
 
 model_results <- rbind(model_results, evaluate_model(model=rf_tuned, holdout=holdout, "rf_tuned"))
 
-model_results
+kable(model_results)
 ```
 
 
@@ -581,9 +583,10 @@ fread("./Data/model_results_no_duration.csv")
 
 # Predict on Test Set
 ```{r}
-scaled_validation<-scale_df(raw_bank_test)
-clustered_validation <- clustering(df_train=smote_train_df, df_test=scaled_validation, n_clusters=4)
+fixed_validation_df <- fix_types(create_weekday(drop_duration(raw_bank_test)))
+scaled_validation_df <- scale_df(fixed_validation_df)
+clustered_validation_df <- clustering(df_train=smote_train_df, df_test=scaled_validation_df, n_clusters=4)
 
-prediction<-predict(logit_cluster, data = clustered_validation, type='raw')
+prediction<-predict(logit_cluster, data = clustered_validation_df, type='raw')
 write.csv(prediction, file = "Data/output.csv")
 ```

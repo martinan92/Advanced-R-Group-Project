@@ -19,7 +19,7 @@ if(!"pacman" %in% installed.packages()) {install.packages("pacman")}
 pacman::p_load("data.table", "lubridate", "ggplot2", "ggrepel", 
                          "plotly", "caret", "bit64", "DataExplorer", 
                          'pROC', 'ISOweek', 'mltools', 'pROC', 'caret',
-                          "DMwR")
+                          "DMwR", "knitr")
 
 library(ggplot2)
 options(scipen = 999)
