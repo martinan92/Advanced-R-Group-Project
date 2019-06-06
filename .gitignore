@@ -5,3 +5,4 @@
 Group Project.pdf
 *.Rproj
 saved_models
+.DS_Store
