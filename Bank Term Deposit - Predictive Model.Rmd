@@ -653,10 +653,10 @@ The the final prediction on the blind Test Set results in approximately a 30/70 
 ```{r}
 fixed_validation_df <- fix_types(create_weekday(drop_duration(raw_bank_test)))
 scaled_validation_df <- scale_df(fixed_validation_df)
-clustered_validation_df <- clustering(df_train=smote_train_df, df_test=scaled_validation_df, n_clusters=4)
+clustered_validation_df <- clustering(df_train=smote_train_df, df_test=scaled_validation_df, n_clusters=4)$test
 
-prediction<-predict(logit_cluster, data = clustered_validation_df, type='raw')
-write.csv(prediction, file = "Data/output.csv")
+prediction<-predict(logit_cluster, clustered_validation_df)
+write.csv(prediction, file = "Data/output.csv", row.names = FALSE)
 
 summary(prediction)
 ```
